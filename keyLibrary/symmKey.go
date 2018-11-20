@@ -9,7 +9,7 @@ import (
 	"io"
 )
 
-func generateSymmKey() []byte {
+func GenerateSymmKey() []byte {
 	key := make([]byte, 32)
 
 	rand.Read(key)
@@ -17,7 +17,7 @@ func generateSymmKey() []byte {
 
 }
 
-func symmKeyEncrypt(plaintext []byte, key []byte) ([]byte, error) {
+func SymmKeyEncrypt(plaintext []byte, key []byte) ([]byte, error) {
 	c, err := aes.NewCipher(key)
 	if err != nil {
 		fmt.Println("error creating new cipher in symmKey encrypt")
@@ -39,7 +39,7 @@ func symmKeyEncrypt(plaintext []byte, key []byte) ([]byte, error) {
 	return gcm.Seal(nonce, nonce, plaintext, nil), nil
 }
 
-func symmKeyDecrypt(ciphertext []byte, key []byte) ([]byte, error) {
+func SymmKeyDecrypt(ciphertext []byte, key []byte) ([]byte, error) {
 	c, err := aes.NewCipher(key)
 	if err != nil {
 		fmt.Println("error creating new cipher in symmKey decrypt")

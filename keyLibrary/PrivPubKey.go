@@ -7,14 +7,14 @@ import (
 	"fmt"
 )
 
-func generatePrivPubKey() (*rsa.PrivateKey, error) {
+func GeneratePrivPubKey() (*rsa.PrivateKey, error) {
 
 	key, _ := rsa.GenerateKey(rand.Reader, 2048)
 
 	return key, nil
 }
 
-func pubKeyEncrypt(pubKey *rsa.PublicKey, message []byte) ([]byte, error) {
+func PubKeyEncrypt(pubKey *rsa.PublicKey, message []byte) ([]byte, error) {
 
 	ciphertext, err := rsa.EncryptOAEP(
 		crypto.SHA256.New(),
@@ -32,7 +32,7 @@ func pubKeyEncrypt(pubKey *rsa.PublicKey, message []byte) ([]byte, error) {
 	return ciphertext, nil
 }
 
-func privKeyDecrypt(privKey *rsa.PrivateKey, cipherText []byte) ([]byte, error) {
+func PrivKeyDecrypt(privKey *rsa.PrivateKey, cipherText []byte) ([]byte, error) {
 	plainText, err := rsa.DecryptOAEP(
 		crypto.SHA256.New(),
 		rand.Reader,

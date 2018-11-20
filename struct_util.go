@@ -2,38 +2,38 @@ package P2_q4d0b_a9h0b_i5g5_v3d0b
 
 import "crypto/rsa"
 
-type request struct {
-	key 	rsa.PublicKey
-	symmKey []byte
+type Request struct {
+	Key 	rsa.PublicKey
+	SymmKey []byte
 }
 
-type response struct {
-	value 	string
+type Response struct {
+	Value 	string
 }
 
-type onion struct {
-	ip	 	 string
-	symmKey  []byte
-	payload  []byte
+type Onion struct {
+	Ip	 	 string
+	SymmKey  []byte
+	Payload  []byte
 }
 
-type networkJoinRequest struct {
-	torIp	string
-	fdlibIp	string
-	pubKey 	rsa.PublicKey
+type NetworkJoinRequest struct {
+	TorIp	string
+	FdlibIp	string
+	PubKey 	rsa.PublicKey
 }
 
-type networkJoinResponse struct {
-	status 	bool
+type NetworkJoinResponse struct {
+	Status 	bool
 }
 
 type DsRequest struct {
-	numNodes  uint16
-	symmKey	  []byte
+	NumNodes  uint16
+	SymmKey	  []byte
 }
 
 type DsResponse struct {
-	tnMap 	map[string]rsa.PublicKey
+	DnMap 	map[string]rsa.PublicKey
 }
 
 

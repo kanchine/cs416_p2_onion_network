@@ -90,5 +90,42 @@ func TestCreateOnionMessage(t *testing.T) {
 }
 
 func TestDecryptOnionRes(t *testing.T) {
+	//creating 4 level onion message
+
+	serverKey := keyLibrary.GenerateSymmKey()
+	t3Key := keyLibrary.GenerateSymmKey()
+	t2Key := keyLibrary.GenerateSymmKey()
+	t1Key := keyLibrary.GenerateSymmKey()
+
+	symmKeys := [][]byte{t1Key, t2Key, t3Key, serverKey}
+
+	response := utils.Response{Value:"Hello World"}
+
+	t3Onion := utils.Onion{}
+	marshalledResonse, _ := utils.Marshall(response)
+	t3Onion.Payload, _ = keyLibrary.SymmKeyEncrypt(marshalledResonse, serverKey)
+
+	t2Onion := utils.Onion{}
+	marshalledT3Onion, _ := utils.Marshall(t3Onion)
+	t2Onion.Payload, _ = keyLibrary.SymmKeyEncrypt(marshalledT3Onion, t3Key)
+
+	t1Onion := utils.Onion{}
+	marshalledT2Onion, _ := utils.Marshall(t2Onion)
+	t1Onion.Payload, _ = keyLibrary.SymmKeyEncrypt(marshalledT2Onion, t2Key)
+
+	endOnion := utils.Onion{}
+	marshalledT1Onion, _ := utils.Marshall(t1Onion)
+	endOnion.Payload, _ = keyLibrary.SymmKeyEncrypt(marshalledT1Onion, t1Key)
+
+	endOnionBytes, _ := utils.Marshall(endOnion)
+
+	//done creating onion message
+
+	//unwrap union message
+	res := decryptServerResponse(endOnionBytes, symmKeys)
+
+	if res != "Hello World" {
+		t.Log("FAILED TO GET CORRECT STRING")
+	}
 
 }

@@ -29,7 +29,7 @@ func createOnionMessage(nodeOrder []string, tnMap map[string]rsa.PublicKey, reqK
 			//this is the server
 			outerOnionMessage.NextIp = ""
 
-			marshalledPayload, _ = utils.Marshall([]byte(reqKey))
+			marshalledPayload, _ = utils.Marshall(utils.Request{Key: reqKey, SymmKey: symmKey})
 
 		} else {
 
@@ -67,7 +67,10 @@ func decryptServerResponse(onionBytes []byte, symmKeys [][]byte) string {
 		onionBytes = unmarshalledOnion.Payload
 	}
 
-	return string(onionBytes)
+	var resObj utils.Response
+	utils.UnMarshall(onionBytes, len(onionBytes), resObj)
+
+	return string(resObj.Value)
 }
 
 func determineTnOrder(tnMap map[string]rsa.PublicKey) []string {

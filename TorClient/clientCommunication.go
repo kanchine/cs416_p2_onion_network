@@ -5,7 +5,6 @@ import (
 	"../utils"
 	"crypto/rsa"
 	"fmt"
-	"golang.org/x/net/html/atom"
 	"net"
 )
 
@@ -33,7 +32,7 @@ func readResponse(conn net.Conn, symmKeys [][]byte) string {
 
 	conn.Read(onionBytes)
 
-	decryptServerResponse(onionBytes, symmKeys)
+	return DecryptServerResponse(onionBytes, symmKeys)
 }
 
 func sendReqToDs(numNodes uint16, dsPublicKey rsa.PublicKey, conn net.Conn) []byte {

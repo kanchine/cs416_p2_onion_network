@@ -11,7 +11,7 @@ import (
 
 //returns a list of symmetrical keys from T1 to Tn
 //and the onion message
-func createOnionMessage(nodeOrder []string, tnMap map[string]rsa.PublicKey, reqKey string) (utils.Onion, [][]byte) {
+func CreateOnionMessage(nodeOrder []string, tnMap map[string]rsa.PublicKey, reqKey string) (utils.Onion, [][]byte) {
 
 	var onionMessage utils.Onion
 	symKeys := make([][]byte, len(nodeOrder))
@@ -48,7 +48,7 @@ func createOnionMessage(nodeOrder []string, tnMap map[string]rsa.PublicKey, reqK
 	return onionMessage, symKeys
 }
 
-func decryptServerResponse(onionBytes []byte, symmKeys [][]byte) string {
+func DecryptServerResponse(onionBytes []byte, symmKeys [][]byte) string {
 
 	for _, key := range symmKeys {
 		decryptedOnionBytes, err := keyLibrary.SymmKeyDecrypt(onionBytes, key)
@@ -73,7 +73,7 @@ func decryptServerResponse(onionBytes []byte, symmKeys [][]byte) string {
 	return string(resObj.Value)
 }
 
-func determineTnOrder(tnMap map[string]rsa.PublicKey) []string {
+func DetermineTnOrder(tnMap map[string]rsa.PublicKey) []string {
 
 	keys := getKeysFromMap(tnMap)
 

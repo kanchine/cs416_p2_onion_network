@@ -38,10 +38,10 @@ func main() {
 		panic("DS did not send enough TN nodes")
 	}
 
-	nodeOrder := determineTnOrder(tnMap)
+	nodeOrder := DetermineTnOrder(tnMap)
 	nodeOrder = append(nodeOrder, clientConfig.DSIp)
 
-	onionMessage, symmKeys := createOnionMessage(nodeOrder, tnMap, os.Args[2])
+	onionMessage, symmKeys := CreateOnionMessage(nodeOrder, tnMap, os.Args[2])
 
 	firstNodeKey := tnMap[nodeOrder[0]]
 	marshalledOnion, err := utils.Marshall(onionMessage)

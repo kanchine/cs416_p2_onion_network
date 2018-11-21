@@ -1,6 +1,7 @@
-package TorClient
+package tests
 
 import (
+	"../TorClient"
 	"../keyLibrary"
 	"../utils"
 	"crypto/rsa"
@@ -25,7 +26,7 @@ func TestDetermineTnOrder(t *testing.T) {
 	myMap["10"] = key.PublicKey
 	myMap["11"] = key.PublicKey
 
-	order := determineTnOrder(myMap)
+	order := TorClient.DetermineTnOrder(myMap)
 	fmt.Println(order)
 }
 
@@ -45,7 +46,7 @@ func TestCreateOnionMessage(t *testing.T) {
 
 	order := []string{"1", "2", "3", "server"}
 
-	onion, symmKeys := createOnionMessage(order, myMap, "Hello World")
+	onion, symmKeys := TorClient.CreateOnionMessage(order, myMap, "Hello World")
 
 	fmt.Println(len(symmKeys))
 
@@ -122,7 +123,7 @@ func TestDecryptOnionRes(t *testing.T) {
 	//done creating onion message
 
 	//unwrap union message
-	res := decryptServerResponse(endOnionBytes, symmKeys)
+	res := TorClient.DecryptServerResponse(endOnionBytes, symmKeys)
 
 	if res != "Hello World" {
 		t.Log("FAILED TO GET CORRECT STRING")

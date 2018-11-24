@@ -1,8 +1,12 @@
 package tests
 
 import (
+	"../utils"
+	"../TorClient"
 	"../dirserver"
 	"../keyLibrary"
+	"crypto/rsa"
+	"fmt"
 	"log"
 	"testing"
 )
@@ -33,6 +37,41 @@ func TestNewDirServer(t *testing.T) {
 	if plainText != "Hello World" {
 		t.Errorf("Unmatched decrypted message: " + plainText)
 	}
+}
+
+func TestListenAndServeTN(t *testing.T) {
+
+	ds := dirserver.NewDirServer("localhost", "8001", "8002", "8003")
+	go ds.ListenAndServeTC()
+
+	numTNs := 5
+	for i := 0; i < numTNs; i++ {
+		addr := "127.0.0.1:000" + string(i)
+		key, _:= keyLibrary.GeneratePrivPubKey()
+		ds.TNs[addr] = key.PublicKey
+	}
+
+	TNs := mockTCRequest(uint16(numTNs), ds.PriKey.PublicKey)
+	for addr, key := range TNs {
+		fmt.Println(addr, " ", key)
+	}
+	if len(TNs) != numTNs {
+		t.Errorf("DS didn't provide enough TNs. Requested: ", numTNs, " Got: ", len(TNs))
+	}
+}
+
+func mockTCRequest(numTNs uint16, key rsa.PublicKey) map[string]rsa.PublicKey {
+	_, err := keyLibrary.LoadPublicKey("../dirserver/public.pem")
+	checkError(err)
+
+	clientConfig := utils.ClientConfig{
+		DSPublicKey:  	key,
+		MaxNumNodes: 	numTNs,
+		DSIp:			"localhost:8002",
+		ServerIp: 		"localhost:8004",
+	}
+
+	return TorClient.ContactDsSerer(clientConfig.DSIp, clientConfig.MaxNumNodes, clientConfig.DSPublicKey)
 }
 
 func checkError(err error) {

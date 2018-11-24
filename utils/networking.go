@@ -6,12 +6,12 @@ import (
 	"net"
 )
 
-func writeToConnection(conn *net.TCPConn, json string) (int, error) {
+func WriteToConnection(conn *net.TCPConn, json string) (int, error) {
 	n, werr := fmt.Fprintf(conn, json+"\n")
 	return n, werr
 }
 
-func readFromConnection(conn *net.TCPConn) (string, error) {
+func ReadFromConnection(conn *net.TCPConn) (string, error) {
 	json, err := bufio.NewReader(conn).ReadString('\n')
 	if err != nil {
 		return "", err

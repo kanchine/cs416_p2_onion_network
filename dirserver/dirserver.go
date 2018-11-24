@@ -1,18 +1,16 @@
 package dirserver
 
 import (
-	"../utils"
 	"../keyLibrary"
-	"bufio"
+	"../utils"
 	"crypto/rand"
 	"crypto/rsa"
-	"encoding/json"
 	"fmt"
 	"log"
+	mathrand "math/rand"
 	"net"
 	"os"
 	"sync"
-	mathrand "math/rand"
 	"time"
 )
 
@@ -47,15 +45,15 @@ func StartDS(Ip, PortForTN, PortForTC, PortForHB string) {
 	ds := NewDirServer(Ip, PortForTN, PortForTC, PortForHB)
 	fmt.Println("DS setup is complete")
 
-	ds.initFD()
-	ds.startService()
-	ds.startMonitoring()
+	ds.InitFD()
+	ds.StartService()
+	ds.StartMonitoring()
 }
 
 func NewDirServer(Ip, PortForTN, PortForTC, PortForHB string) *DirServer {
 
 	ds := new(DirServer)
-	ds.loadPrivateKey()
+	ds.LoadPrivateKey()
 	ds.TNs = make(map[string]rsa.PublicKey)
 	ds.Ip = Ip
 	ds.PortForTN = PortForTN
@@ -65,7 +63,7 @@ func NewDirServer(Ip, PortForTN, PortForTC, PortForHB string) *DirServer {
 	return ds
 }
 
-func (ds *DirServer) loadPrivateKey() {
+func (ds *DirServer) LoadPrivateKey() {
 
 	key, err := keyLibrary.LoadPrivateKey("../dirserver/private.pem")
 	checkError(err)
@@ -73,7 +71,7 @@ func (ds *DirServer) loadPrivateKey() {
 	ds.PriKey = key
 }
 
-func (ds *DirServer) initFD() {
+func (ds *DirServer) InitFD() {
 	fd, notifyCh, err := utils.Initialize(epochNonce, chCapacity)
 	checkError(err)
 
@@ -81,13 +79,13 @@ func (ds *DirServer) initFD() {
 	ds.NotifyCh = notifyCh
 }
 
-func (ds *DirServer) startService() {
+func (ds *DirServer) StartService() {
 
-	go ds.listenAndServeTN()
-	go ds.listenAndServeTC()
+	go ds.ListenAndServeTN()
+	go ds.ListenAndServeTC()
 }
 
-func (ds *DirServer) listenAndServeTN() {
+func (ds *DirServer) ListenAndServeTN() {
 
 	localTcpAddr, err := net.ResolveTCPAddr("tcp", ds.Ip + ":" + ds.PortForTN)
 	checkError(err)
@@ -106,11 +104,11 @@ func (ds *DirServer) listenAndServeTN() {
 		fmt.Println("================================================================")
 		fmt.Println("Here comes a new TN: ", conn.RemoteAddr().String())
 
-		go ds.handleTN(conn)
+		go ds.HandleTN(conn)
 	}
 }
 
-func (ds *DirServer) listenAndServeTC() {
+func (ds *DirServer) ListenAndServeTC() {
 
 	localTcpAddr, err := net.ResolveTCPAddr("tcp", ds.Ip + ":" + ds.PortForTC)
 	checkError(err)
@@ -129,29 +127,29 @@ func (ds *DirServer) listenAndServeTC() {
 		fmt.Println("================================================================")
 		fmt.Println("Here comes a new TC: ", conn.RemoteAddr().String())
 
-		go ds.handleTC(conn)
+		go ds.HandleTC(conn)
 	}
 }
 
-func (ds *DirServer) handleTN(conn *net.TCPConn) {
+func (ds *DirServer) HandleTN(conn *net.TCPConn) {
 
 	defer func() {
 		err := conn.Close()
 		if err != nil {
-			printError("handleTN: failed to close tcp connection.", err)
+			printError("HandleTN: failed to close tcp connection.", err)
 		}
 	}()
 
-	data, err := readFromConnection(conn)
+	reqStr, err := utils.ReadFromConnection(conn)
 	if err != nil {
-		printError("handleTN: reading data from connection failed", err)
+		printError("HandleTN: reading request from connection failed", err)
 		return
 	}
 
 	var req utils.NetworkJoinRequest
-	err = json.Unmarshal([]byte(data), &req)
+	err = utils.UnMarshall([]byte(reqStr), &req)
 	if err != nil {
-		printError("handleTN: request unmarshal failed", err)
+		printError("HandleTN: request unmarshal failed", err)
 		return
 	}
 
@@ -164,19 +162,19 @@ func (ds *DirServer) handleTN(conn *net.TCPConn) {
 
 	err = ds.Fd.AddMonitor(ds.Ip + ":" + ds.PortForHB, req.FdlibIp, lostMsgThresh)
 	if err != nil {
-		printError("handleTN: AddMonitor failed", err)
+		printError("HandleTN: AddMonitor failed", err)
 		resp.Status = false
 	}
 
-	respData, err := json.Marshal(&resp)
+	respBytes, err := utils.Marshall(&resp)
 	if err != nil {
-		printError("handleTN: response marshaling failed", err)
+		printError("HandleTN: response marshaling failed", err)
 		return
 	}
 
-	_, err = writeToConnection(conn, string(respData))
+	_, err = utils.WriteToConnection(conn, string(respBytes))
 	if err != nil {
-		printError("handleTN: response write failed", err)
+		printError("HandleTN: response write failed", err)
 		return
 	}
 
@@ -186,68 +184,68 @@ func (ds *DirServer) handleTN(conn *net.TCPConn) {
 	}
 }
 
-func (ds *DirServer) handleTC(conn *net.TCPConn) {
+func (ds *DirServer) HandleTC(conn *net.TCPConn) {
 
 	defer func() {
 		err := conn.Close()
 		if err != nil {
-			printError("handleTC: failed to close tcp connection.", err)
+			printError("HandleTC: failed to close tcp connection.", err)
 		}
 	}()
 
-	data, err := readFromConnection(conn)
+	reqStr, err := utils.ReadFromConnection(conn)
 	if err != nil {
-		printError("handleTC: reading data from connection failed", err)
+		printError("HandleTC: reading request from connection failed", err)
 		return
 	}
 
-	decryptedData, err := keyLibrary.PrivKeyDecrypt(ds.PriKey, []byte(data))
+	decryptedReq, err := keyLibrary.PrivKeyDecrypt(ds.PriKey, []byte(reqStr))
 	if err != nil {
-		printError("handleTC: request decryption failed", err)
+		printError("HandleTC: request decryption failed", err)
 		return
 	}
 
 	var req utils.DsRequest
-	err = json.Unmarshal(decryptedData, &req)
+	err = utils.UnMarshall(decryptedReq, &req)
 	if err != nil {
-		printError("handleTC: request unmarshal failed", err)
+		printError("HandleTC: request unmarshal failed", err)
 		return
 	}
 
 	// Select a specified number of TNs at random. If not enough TNs, return all of them
-	circuit := ds.setupCircuit(req.NumNodes)
+	circuit := ds.SetupCircuit(req.NumNodes)
 	var resp utils.DsResponse
 	resp.DnMap = circuit
 
 	// Marshall and encrypt the circuit
-	respData, err := json.Marshal(&resp)
+	respBytes, err := utils.Marshall(&resp)
 	if err != nil {
-		printError("handleTC: response marshaling failed", err)
+		printError("HandleTC: response marshaling failed", err)
 		return
 	}
-	encryptedData, err := keyLibrary.SymmKeyEncrypt(respData, req.SymmKey)
-	_, err = writeToConnection(conn, string(encryptedData))
+	encryptedResp, err := keyLibrary.SymmKeyEncrypt(respBytes, req.SymmKey)
+	_, err = utils.WriteToConnection(conn, string(encryptedResp))
 	if err != nil {
-		printError("handleTC: response write failed", err)
+		printError("HandleTC: response write failed", err)
 		return
 	}
 
 	Trace.Println("A circuit of ", len(circuit), " TNs has been setup for TC: ", conn.RemoteAddr())
 }
 
-func (ds *DirServer) startMonitoring() {
+func (ds *DirServer) StartMonitoring() {
 
 	for {
 		select {
 		case notify := <-ds.NotifyCh:
 			Trace.Println("Detected a failure of", notify)
-			ds.removeTN(notify.UDPIpPort)
+			ds.RemoveTN(notify.UDPIpPort)
 		case <-time.After(time.Duration(int(lostMsgThresh)*3) * time.Second):
 		}
 	}
 }
 
-func (ds *DirServer) removeTN(TNAddr string) {
+func (ds *DirServer) RemoveTN(TNAddr string) {
 
 	ipToRemove, _, err := net.SplitHostPort(TNAddr)
 	if err != nil {
@@ -270,7 +268,7 @@ func (ds *DirServer) removeTN(TNAddr string) {
 	}
 }
 
-func (ds *DirServer) setupCircuit(numTNs uint16) map[string]rsa.PublicKey {
+func (ds *DirServer) SetupCircuit(numTNs uint16) map[string]rsa.PublicKey {
 
 	ds.Mu.Lock()
 	defer ds.Mu.Unlock()
@@ -306,21 +304,6 @@ func SaveKeysOnDisk() {
 
 	keyLibrary.SavePrivateKeyOnDisk("../dirserver/private.pem", privateKey)
 	keyLibrary.SavePublicKeyOnDisk("../dirserver/public.pem", &publicKey)
-}
-
-func readFromConnection(conn *net.TCPConn) (string, error) {
-	data, err := bufio.NewReader(conn).ReadString('\n')
-
-	if err != nil {
-		return "", err
-	}
-
-	return data, nil
-}
-
-func writeToConnection (conn *net.TCPConn, json string) (int, error) {
-	n, werr := fmt.Fprintf(conn, json+"\n")
-	return n, werr
 }
 
 func getKeysFromMap(m map[string]rsa.PublicKey) []string {

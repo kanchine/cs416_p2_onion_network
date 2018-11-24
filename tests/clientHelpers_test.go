@@ -5,30 +5,10 @@ import (
 	"../keyLibrary"
 	"../utils"
 	"crypto/rsa"
+	"encoding/json"
 	"fmt"
 	"testing"
 )
-
-func TestDetermineTnOrder(t *testing.T) {
-
-	myMap := make(map[string]rsa.PublicKey)
-	key, _ := keyLibrary.GeneratePrivPubKey()
-
-	myMap["1"] = key.PublicKey
-	myMap["2"] = key.PublicKey
-	myMap["3"] = key.PublicKey
-	myMap["4"] = key.PublicKey
-	myMap["5"] = key.PublicKey
-	myMap["6"] = key.PublicKey
-	myMap["7"] = key.PublicKey
-	myMap["8"] = key.PublicKey
-	myMap["9"] = key.PublicKey
-	myMap["10"] = key.PublicKey
-	myMap["11"] = key.PublicKey
-
-	order := TorClient.DetermineTnOrder(myMap)
-	fmt.Println(order)
-}
 
 func TestCreateOnionMessage(t *testing.T) {
 
@@ -46,49 +26,111 @@ func TestCreateOnionMessage(t *testing.T) {
 
 	order := []string{"1", "2", "3", "server"}
 
-	onion, symmKeys := TorClient.CreateOnionMessage(order, myMap, "Hello World")
+	onionbytes, _ := TorClient.CreateOnionMessage(order, myMap, "Hello World")
 
-	fmt.Println(len(symmKeys))
+	var encryptedOnionBytes [][]byte
 
-	if onion.NextIp != "2" {
-		fmt.Println("should get 2 but received", onion.NextIp)
-		t.Log("FAILED")
+	err := utils.UnMarshall(onionbytes, &encryptedOnionBytes)
+	if err != nil {
+		fmt.Println(err)
 	}
 
-	if string(onion.SymmKey) != string(symmKeys[0]) {
-		fmt.Println("wrong semm key 1")
-		t.Log("FAILED")
+	var decryptedOnionBytes []byte
+
+	for i := range encryptedOnionBytes {
+		decryptedBytePiece, err := keyLibrary.PrivKeyDecrypt(t1Key, encryptedOnionBytes[i])
+		if err != nil {
+			fmt.Println("failed decrypt")
+		}
+		decryptedOnionBytes = append(decryptedOnionBytes, decryptedBytePiece...)
 	}
 
-	decryptedOnion2bytes, _ := keyLibrary.PrivKeyDecrypt(t2Key, onion.Payload)
-	var onion2 utils.Onion
-	utils.UnMarshall(decryptedOnion2bytes, len(decryptedOnion2bytes), onion2)
+	var t1OnionMessage utils.Onion
+	err = json.Unmarshal(decryptedOnionBytes, &t1OnionMessage)
+	if err != nil {
+		fmt.Println("here", err)
+	}
+	fmt.Println(t1OnionMessage)
 
-	if onion2.NextIp != "3" {
-		fmt.Println("should get 3 but received", onion2.NextIp)
-		t.Log("FAILED")
+	/////////////////////////////////// 2ND ONION MESSAGE ///////////////////////
+
+	var unmarshalledOnionBytes2 [][]byte
+
+	err = utils.UnMarshall(t1OnionMessage.Payload, &unmarshalledOnionBytes2)
+	if err != nil {
+		fmt.Println("error here", err)
 	}
 
-	if string(onion2.SymmKey) != string(symmKeys[1]) {
-		fmt.Println("wrong semm key 2")
-		t.Log("FAILED")
+	var decryptedOnionBytes2 []byte
+
+ 	for i := range unmarshalledOnionBytes2 {
+		decryptedBytePiece, err := keyLibrary.PrivKeyDecrypt(t2Key, unmarshalledOnionBytes2[i])
+		if err != nil {
+			fmt.Println("failed decrypt")
+		}
+		decryptedOnionBytes2 = append(decryptedOnionBytes2, decryptedBytePiece...)
 	}
 
-	decryptedOnion3bytes, _ := keyLibrary.PrivKeyDecrypt(t3Key, onion2.Payload)
-	var onion3 utils.Onion
-	utils.UnMarshall(decryptedOnion3bytes, len(decryptedOnion3bytes), onion3)
+ 	var t2OnionMessage utils.Onion
 
-	if onion3.NextIp != "server" {
-		fmt.Println("should get server but received", onion3.NextIp)
-		t.Log("FAILED")
+ 	utils.UnMarshall(decryptedOnionBytes2, &t2OnionMessage)
+
+ 	fmt.Println( t2OnionMessage)
+
+	/////////////////////////////////// 3rd ONION MESSAGE ///////////////////////
+
+	var unmarshalledOnionBytes3 [][]byte
+
+	err = utils.UnMarshall(t2OnionMessage.Payload, &unmarshalledOnionBytes3)
+	if err != nil {
+		fmt.Println("error here", err)
 	}
 
-	if string(onion3.SymmKey) != string(symmKeys[2]) {
-		fmt.Println("wrong semm key 3")
-		t.Log("FAILED")
+	var decryptedOnionBytes3 []byte
+
+	for i := range unmarshalledOnionBytes3 {
+		decryptedBytePiece, err := keyLibrary.PrivKeyDecrypt(t3Key, unmarshalledOnionBytes3[i])
+		if err != nil {
+			fmt.Println("failed decrypt")
+		}
+		decryptedOnionBytes3 = append(decryptedOnionBytes3, decryptedBytePiece...)
 	}
+
+	var t3OnionMessage utils.Onion
+
+	utils.UnMarshall(decryptedOnionBytes3, &t3OnionMessage)
+
+	fmt.Println( t3OnionMessage)
+
+	/////////////////////////////////// 4th ONION MESSAGE ///////////////////////
+
+	var serverBytes [][]byte
+
+	err = utils.UnMarshall(t3OnionMessage.Payload, &serverBytes)
+	if err != nil {
+		fmt.Println("error here", err)
+	}
+
+	var decryptedServerBytes []byte
+
+	for i := range serverBytes {
+		decryptedBytePiece, err := keyLibrary.PrivKeyDecrypt(serverKey, serverBytes[i])
+		if err != nil {
+			fmt.Println("failed decrypt")
+		}
+		decryptedServerBytes = append(decryptedServerBytes, decryptedBytePiece...)
+	}
+
+	var serverMessage utils.Request
+
+	utils.UnMarshall(decryptedServerBytes, &serverMessage)
+
+	fmt.Println(serverMessage)
 
 }
+
+
+/*
 
 func TestDecryptOnionRes(t *testing.T) {
 	//creating 4 level onion message
@@ -129,4 +171,41 @@ func TestDecryptOnionRes(t *testing.T) {
 		t.Log("FAILED TO GET CORRECT STRING")
 	}
 
+func TestDetermineTnOrder(t *testing.T) {
+
+	myMap := make(map[string]rsa.PublicKey)
+	key, _ := keyLibrary.GeneratePrivPubKey()
+
+	myMap["1"] = key.PublicKey
+	myMap["2"] = key.PublicKey
+	myMap["3"] = key.PublicKey
+	myMap["4"] = key.PublicKey
+	myMap["5"] = key.PublicKey
+	myMap["6"] = key.PublicKey
+	myMap["7"] = key.PublicKey
+	myMap["8"] = key.PublicKey
+	myMap["9"] = key.PublicKey
+	myMap["10"] = key.PublicKey
+	myMap["11"] = key.PublicKey
+
+	order := TorClient.DetermineTnOrder(myMap)
+	fmt.Println(order)
+	fmt.Println(len(order))
+	if len(order) != 11 {
+		t.Log("FAILED DETERMINE TN ORDER")
+	}
 }
+
+func TestEncryptPayload(t *testing.T) {
+
+	t1Key, _ := keyLibrary.GeneratePrivPubKey()
+
+	myBytes := []byte("ekrjhgekrjhgejrghserjghserjkhgserhjgsjhrvidshbewkjfhgjhsgslekjkuesrjhgsekrjdghdkjfghdfkjghsdkjhgsdjrghsdfghj,dfjkhbdfjsbh,jdhfbh,jdfhsbgdf,sjhbkfdhbjldsfgjdhsfgvsjdhbserhldrshvliaeuhluiaerhliauewglieruaghlueirhglaieruhgiluasdfhglkdfjsghlaekfhalkjsdfharlukdghasj,dhfgajshdfgajhdsgfdjs,fgjah,dfgaksjdhfjksdfghjsdfhbadlrubhdaruhadkrhdjrs,f,jadrfb,jarfg,hjagfj,harfgajh,sfgahsjdfgasjdhfgasjdfasdjhfgasjdhfgasjhd,fgas,jhdsjadhfgasdjh,gvurjh")
+
+	encryptedPayload := TorClient.EncryptPayload(myBytes, t1Key.PublicKey)
+
+	fmt.Println(encryptedPayload)
+}
+
+
+}*/

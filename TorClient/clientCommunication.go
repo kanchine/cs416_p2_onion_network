@@ -64,7 +64,7 @@ func readResFromDs(conn net.Conn, symmKey []byte) map[string]rsa.PublicKey {
 	}
 
 	var dsResponse utils.DsResponse
-	utils.UnMarshall(decryptedBytes, len(decryptedBytes), dsResponse)
+	utils.UnMarshall(decryptedBytes, dsResponse)
 
 	return dsResponse.DnMap
 }

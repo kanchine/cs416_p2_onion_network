@@ -4,48 +4,94 @@ import (
 	"../keyLibrary"
 	"../utils"
 	"crypto/rsa"
-	"fmt"
 	"math/rand"
 	"time"
 )
 
+const byteSize = 150
+
 //returns a list of symmetrical keys from T1 to Tn
 //and the onion message
-func CreateOnionMessage(nodeOrder []string, tnMap map[string]rsa.PublicKey, reqKey string) (utils.Onion, [][]byte) {
+func CreateOnionMessage(nodeOrder []string, tnMap map[string]rsa.PublicKey, reqKey string) ([]byte, [][]byte) {
 
-	var onionMessage utils.Onion
+	var onionMessage []byte
 	symKeys := make([][]byte, len(nodeOrder))
 
-	for i := len(nodeOrder) - 2; i > 0; i -- {
+	ServerSymKey := keyLibrary.GenerateSymmKey()
+	request, _ := utils.Marshall(utils.Request{Key: reqKey, SymmKey: ServerSymKey})
+
+	symKeys = append(symKeys, ServerSymKey)
+
+	encryptedRequest := EncryptPayload(request, tnMap[nodeOrder[len(nodeOrder)-1]])
+
+	marshalledRequest, _ := utils.Marshall(encryptedRequest)
+
+	for i := len(nodeOrder) - 2; i > -1; i -- {
 		var outerOnionMessage utils.Onion
 
 		symmKey := keyLibrary.GenerateSymmKey()
 		outerOnionMessage.SymmKey = symmKey
 		symKeys = append([][]byte{symmKey}, symKeys...)
 
-		var marshalledPayload []byte
+		if i == len(nodeOrder) - 2 {
+			//this is onion message to the server
+			outerOnionMessage.NextIp = nodeOrder[len(nodeOrder) - 1]
 
-		if i == len(nodeOrder) - 1 {
-			//this is the server
-			outerOnionMessage.NextIp = ""
+			outerOnionMessage.Payload = marshalledRequest
 
-			marshalledPayload, _ = utils.Marshall(utils.Request{Key: reqKey, SymmKey: symmKey})
+			marshalledOnion, _ := utils.Marshall(outerOnionMessage)
+
+			encryptedOnion := EncryptPayload(marshalledOnion, tnMap[nodeOrder[len(nodeOrder) - 2 ]])
+
+			finalMarshalledOnion, _ := utils.Marshall(encryptedOnion)
+
+			onionMessage = finalMarshalledOnion
 
 		} else {
 
 			outerOnionMessage.NextIp = nodeOrder[i+1]
 
-			marshalledPayload, _ = utils.Marshall(onionMessage)
+			nodePublicKey := tnMap[nodeOrder[i]]
+
+			outerOnionMessage.Payload = onionMessage
+			marshalledOnion, _ := utils.Marshall(outerOnionMessage)
+
+			encryptedOnion := EncryptPayload(marshalledOnion, nodePublicKey)
+
+			finalMarshalledOnion, _ := utils.Marshall(encryptedOnion)
+
+			onionMessage = finalMarshalledOnion
 
 		}
-
-		nodePublicKey := tnMap[nodeOrder[i]]
-		marshalledPayload, _ = keyLibrary.PubKeyEncrypt(&nodePublicKey, marshalledPayload)
-		outerOnionMessage.Payload = marshalledPayload
-		onionMessage = outerOnionMessage
 	}
 
+	//marshalledOnion, _ := utils.Marshall(onionMessage)
+	//encryptedOnion := EncryptPayload(marshalledOnion, tnMap[nodeOrder[0]])
+	//finalOnion, _ := utils.Marshall(encryptedOnion)
+
 	return onionMessage, symKeys
+
+}
+
+func EncryptPayload(onionBytes []byte, key rsa.PublicKey) [][]byte {
+	var encryptedPayload [][]byte
+
+	counter := 0
+
+	for counter + byteSize - 1 < len(onionBytes) {
+
+		encryptedSlice, _ := keyLibrary.PubKeyEncrypt(&key, onionBytes[counter : counter + byteSize])
+
+		encryptedPayload = append(encryptedPayload, encryptedSlice)
+
+		counter += byteSize
+	}
+
+	lastEncryptedSlice, _ := keyLibrary.PubKeyEncrypt(&key, onionBytes[counter:])
+
+	encryptedPayload = append(encryptedPayload, lastEncryptedSlice)
+
+	return encryptedPayload
 }
 
 func DecryptServerResponse(onionBytes []byte, symmKeys [][]byte) string {
@@ -58,17 +104,17 @@ func DecryptServerResponse(onionBytes []byte, symmKeys [][]byte) string {
 		}
 
 		var unmarshalledOnion utils.Onion
-		err = utils.UnMarshall(decryptedOnionBytes, len(decryptedOnionBytes), unmarshalledOnion)
+		err = utils.UnMarshall(decryptedOnionBytes, unmarshalledOnion)
 
 		if err != nil {
 			panic("can not unmarshal onion")
 		}
 
-		onionBytes = unmarshalledOnion.Payload
+		//onionBytes = unmarshalledOnion.Payload
 	}
 
 	var resObj utils.Response
-	utils.UnMarshall(onionBytes, len(onionBytes), resObj)
+	utils.UnMarshall(onionBytes, resObj)
 
 	return string(resObj.Value)
 }
@@ -77,13 +123,11 @@ func DetermineTnOrder(tnMap map[string]rsa.PublicKey) []string {
 
 	keys := getKeysFromMap(tnMap)
 
-	order := make([]string, len(tnMap))
+	order := make([]string, 0)
 
 	rand.Seed(time.Now().Unix())
 	for len(keys) > 1 {
 		i := rand.Intn(len(keys)-1)
-		fmt.Println("i", i)
-		fmt.Println("key", keys[i])
 		order = append(order, keys[i])
 
 		keys[i] = keys[len(keys)-1]

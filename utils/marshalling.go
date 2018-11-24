@@ -1,22 +1,17 @@
 package utils
 
-
 import (
-	"bytes"
-	"encoding/gob"
+	"encoding/json"
 )
 
 func Marshall(data interface{}) ([]byte, error) {
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	err := enc.Encode(data)
-	return buf.Bytes(), err
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return []byte{}, err
+	}
+	return bytes, nil
 }
 
-func UnMarshall(data []byte, size int, e interface{}) error {
-	var buffer bytes.Buffer
-	dec := gob.NewDecoder(&buffer)
-	buffer.Write(data[0:size])
-	err := dec.Decode(e)
-	return err
+func UnMarshall(data []byte, e interface{}) error {
+	return json.Unmarshal(data, e)
 }

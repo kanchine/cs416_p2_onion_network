@@ -1,7 +1,6 @@
 package TorClient
 
 import (
-	"../keyLibrary"
 	"../utils"
 	"encoding/json"
 	"fmt"
@@ -41,18 +40,11 @@ func main() {
 	nodeOrder := DetermineTnOrder(tnMap)
 	nodeOrder = append(nodeOrder, clientConfig.DSIp)
 
+
+	//2. create and send onion
 	onionMessage, symmKeys := CreateOnionMessage(nodeOrder, tnMap, os.Args[2])
 
-	firstNodeKey := tnMap[nodeOrder[0]]
-	marshalledOnion, err := utils.Marshall(onionMessage)
-
-	if err != nil {
-		panic("can not marshall first onion")
-	}
-
-	encryptedOnionMessage, err := keyLibrary.PubKeyEncrypt(&firstNodeKey, marshalledOnion)
-
-	res := sendOnionMessage(nodeOrder[0], encryptedOnionMessage, symmKeys)
+	res := sendOnionMessage(nodeOrder[0], onionMessage, symmKeys)
 
 	fmt.Println("we have received this value from the server: ", res)
 

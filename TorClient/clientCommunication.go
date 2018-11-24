@@ -3,6 +3,7 @@ package TorClient
 import (
 	"../keyLibrary"
 	"../utils"
+	"bufio"
 	"crypto/rsa"
 	"fmt"
 	"net"
@@ -22,17 +23,20 @@ func sendOnionMessage(t1 string, onion []byte, symmKeys [][]byte ) string {
 
 	conn := getTcpConnection(t1)
 
-	conn.Write(onion)
+	fmt.Fprint(conn, string(onion) + "\n")
 
 	return readResponse(conn, symmKeys)
 }
 
 func readResponse(conn net.Conn, symmKeys [][]byte) string {
-	var onionBytes []byte
 
-	conn.Read(onionBytes)
+	json, err := bufio.NewReader(conn).ReadString('\n')
 
-	return DecryptServerResponse(onionBytes, symmKeys)
+	if err != nil {
+		panic("can not read response from connection")
+	}
+
+	return DecryptServerResponse([]byte(json), symmKeys)
 }
 
 func sendReqToDs(numNodes uint16, dsPublicKey rsa.PublicKey, conn net.Conn) []byte {
@@ -45,19 +49,22 @@ func sendReqToDs(numNodes uint16, dsPublicKey rsa.PublicKey, conn net.Conn) []by
 		fmt.Println("Bad marshalling")
 	}
 
-	encryptedRequest, err := keyLibrary.PubKeyEncrypt(&dsPublicKey, reqBytes)
+	encryptedRequest := EncryptPayload(reqBytes, dsPublicKey)
+	marshalledRequest, _ := utils.Marshall(encryptedRequest)
 
-	conn.Write(encryptedRequest)
+	fmt.Fprintf(conn, string(marshalledRequest) + "\n")
 
 	return symmKey
 }
 
 func readResFromDs(conn net.Conn, symmKey []byte) map[string]rsa.PublicKey {
-	var resBytes []byte
+	json, err := bufio.NewReader(conn).ReadString('\n')
 
-	conn.Read(resBytes)
+	if err != nil {
+		panic("can not read response from connection")
+	}
 
-	decryptedBytes, err := keyLibrary.SymmKeyDecrypt(resBytes, symmKey)
+	decryptedBytes, err := keyLibrary.SymmKeyDecrypt([]byte(json), symmKey)
 
 	if err != nil {
 		panic("can not decrypt response from DS")

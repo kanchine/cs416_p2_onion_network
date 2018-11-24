@@ -1,15 +1,17 @@
 package keyLibrary
 
 import (
-	"bufio"
-	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
+	"bufio"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
 	"os"
 )
+
+
 
 func GeneratePrivPubKey() (*rsa.PrivateKey, error) {
 
@@ -21,7 +23,7 @@ func GeneratePrivPubKey() (*rsa.PrivateKey, error) {
 func PubKeyEncrypt(pubKey *rsa.PublicKey, message []byte) ([]byte, error) {
 
 	ciphertext, err := rsa.EncryptOAEP(
-		crypto.SHA256.New(),
+		sha256.New(),
 		rand.Reader,
 		pubKey,
 		message,
@@ -29,7 +31,7 @@ func PubKeyEncrypt(pubKey *rsa.PublicKey, message []byte) ([]byte, error) {
 	)
 
 	if err != nil {
-		fmt.Println("failed to encrypt with public key")
+		fmt.Println(err)
 		return nil, err
 	}
 
@@ -38,7 +40,7 @@ func PubKeyEncrypt(pubKey *rsa.PublicKey, message []byte) ([]byte, error) {
 
 func PrivKeyDecrypt(privKey *rsa.PrivateKey, cipherText []byte) ([]byte, error) {
 	plainText, err := rsa.DecryptOAEP(
-		crypto.SHA256.New(),
+		sha256.New(),
 		rand.Reader,
 		privKey,
 		cipherText,
@@ -46,7 +48,7 @@ func PrivKeyDecrypt(privKey *rsa.PrivateKey, cipherText []byte) ([]byte, error) 
 	)
 
 	if err != nil {
-		fmt.Println("error decrypting")
+		fmt.Println(err)
 		return nil, err
 	}
 

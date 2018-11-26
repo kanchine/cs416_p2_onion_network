@@ -1,17 +1,15 @@
 package keyLibrary
 
 import (
+	"bufio"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
-	"bufio"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
 	"os"
 )
-
-
 
 func GeneratePrivPubKey() (*rsa.PrivateKey, error) {
 
@@ -148,3 +146,4 @@ func readPemFile(fileName string) ([]byte, error) {
 
 	return pemBytes, nil
 }
+

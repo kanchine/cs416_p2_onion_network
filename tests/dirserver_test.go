@@ -5,6 +5,7 @@ import (
 	"../TorClient"
 	"../dirserver"
 	"../keyLibrary"
+	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
 	"log"
@@ -36,6 +37,27 @@ func TestNewDirServer(t *testing.T) {
 	plainText := string(decryptedBytes)
 	if plainText != "Hello World" {
 		t.Errorf("Unmatched decrypted message: " + plainText)
+	}
+}
+
+func TestMarshalling(t *testing.T) {
+	circuit := make(map[string]rsa.PublicKey)
+	key, _ := rsa.GenerateKey(rand.Reader, 2048)
+	circuit["localhost:8000"] = key.PublicKey
+
+	var resp utils.DsResponse
+	resp.DnMap = circuit
+
+	respBytes, err := utils.Marshall(&resp)
+	if err != nil {
+		checkError(err)
+	}
+	var dsResponse utils.DsResponse
+	utils.UnMarshall(respBytes, dsResponse)
+
+	if len(resp.DnMap) != len(dsResponse.DnMap) {
+		t.Errorf("Unmatched numbers of TNs")
+		fmt.Println("len(resp.DnMap): ", len(resp.DnMap), "\nlen(dsResponse.DnMap): ", len(dsResponse.DnMap))
 	}
 }
 

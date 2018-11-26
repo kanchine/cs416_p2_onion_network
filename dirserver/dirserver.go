@@ -193,13 +193,14 @@ func (ds *DirServer) HandleTC(conn *net.TCPConn) {
 		}
 	}()
 
-	reqStr, err := utils.ReadFromConnection(conn)
+	buf := make([]byte, 2048)
+	n, err := conn.Read(buf)
 	if err != nil {
 		printError("HandleTC: reading request from connection failed", err)
 		return
 	}
 
-	decryptedReq, err := keyLibrary.PrivKeyDecrypt(ds.PriKey, []byte(reqStr))
+	decryptedReq, err := keyLibrary.PrivKeyDecrypt(ds.PriKey, buf[:n])
 	if err != nil {
 		printError("HandleTC: request decryption failed", err)
 		return
@@ -223,8 +224,9 @@ func (ds *DirServer) HandleTC(conn *net.TCPConn) {
 		printError("HandleTC: response marshaling failed", err)
 		return
 	}
-	encryptedResp, err := keyLibrary.SymmKeyEncrypt(respBytes, req.SymmKey)
-	_, err = utils.WriteToConnection(conn, string(encryptedResp))
+
+	encryptedResp, err := keyLibrary.SymmKeyEncryptBase64(respBytes, req.SymmKey)
+	n, err = conn.Write(encryptedResp)
 	if err != nil {
 		printError("HandleTC: response write failed", err)
 		return
@@ -270,8 +272,8 @@ func (ds *DirServer) RemoveTN(TNAddr string) {
 
 func (ds *DirServer) SetupCircuit(numTNs uint16) map[string]rsa.PublicKey {
 
-	ds.Mu.Lock()
-	defer ds.Mu.Unlock()
+	//ds.Mu.Lock()
+	//defer ds.Mu.Unlock()
 
 	if len(ds.TNs) <= int(numTNs) {
 		return ds.TNs

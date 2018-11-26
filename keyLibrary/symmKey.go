@@ -4,6 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -60,3 +61,28 @@ func SymmKeyDecrypt(ciphertext []byte, key []byte) ([]byte, error) {
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 	return gcm.Open(nil, nonce, ciphertext, nil)
 }
+
+func SymmKeyEncryptBase64(plaintext []byte, key []byte) (base64Ciphertext []byte, err error) {
+
+	cipherText, err := SymmKeyEncrypt(plaintext, key)
+	if err != nil {
+		return nil, err
+	}
+
+	base64Ciphertext = make([]byte, base64.RawStdEncoding.EncodedLen(len(cipherText)))
+	base64.RawStdEncoding.Encode(base64Ciphertext, cipherText)
+
+	return
+}
+
+func SymmKeyDecryptBase64(base64Ciphertext []byte, key []byte) (plaintext []byte, err error) {
+
+	ciphertext := make([]byte, base64.RawStdEncoding.DecodedLen(len(base64Ciphertext)))
+	_, err = base64.RawStdEncoding.Decode(ciphertext, base64Ciphertext)
+	if err != nil {
+		return nil, err
+	}
+
+	return SymmKeyDecrypt(ciphertext, key)
+}
+

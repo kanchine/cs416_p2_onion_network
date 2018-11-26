@@ -49,29 +49,32 @@ func sendReqToDs(numNodes uint16, dsPublicKey rsa.PublicKey, conn net.Conn) []by
 		fmt.Println("Bad marshalling")
 	}
 
-	encryptedRequest := EncryptPayload(reqBytes, dsPublicKey)
-	marshalledRequest, _ := utils.Marshall(encryptedRequest)
-
-	fmt.Fprintf(conn, string(marshalledRequest) + "\n")
+	encryptedBytes, _ := keyLibrary.PubKeyEncrypt(&dsPublicKey, reqBytes)
+	conn.Write(encryptedBytes)
 
 	return symmKey
 }
 
 func readResFromDs(conn net.Conn, symmKey []byte) map[string]rsa.PublicKey {
-	json, err := bufio.NewReader(conn).ReadString('\n')
-
+	// TODO: Not sure if it's safe to hardcode the buf size here
+	buf := make([]byte, 8192)
+	n, err := conn.Read(buf)
 	if err != nil {
 		panic("can not read response from connection")
 	}
 
-	decryptedBytes, err := keyLibrary.SymmKeyDecrypt([]byte(json), symmKey)
-
+	decryptedBytes, err := keyLibrary.SymmKeyDecryptBase64(buf[:n], symmKey)
 	if err != nil {
+		fmt.Println(err)
 		panic("can not decrypt response from DS")
 	}
 
 	var dsResponse utils.DsResponse
-	utils.UnMarshall(decryptedBytes, dsResponse)
+	err = utils.UnMarshall(decryptedBytes, &dsResponse)
+	if err != nil {
+		fmt.Println(err)
+		panic("readResFromDs: Unmarshalling failed")
+	}
 
 	return dsResponse.DnMap
 }

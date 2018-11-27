@@ -5,10 +5,10 @@ import (
 	"../TorClient"
 	"../dirserver"
 	"../keyLibrary"
-	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
 	"log"
+	"strconv"
 	"testing"
 )
 
@@ -40,26 +40,6 @@ func TestNewDirServer(t *testing.T) {
 	}
 }
 
-func TestMarshalling(t *testing.T) {
-	circuit := make(map[string]rsa.PublicKey)
-	key, _ := rsa.GenerateKey(rand.Reader, 2048)
-	circuit["localhost:8000"] = key.PublicKey
-
-	var resp utils.DsResponse
-	resp.DnMap = circuit
-
-	respBytes, err := utils.Marshall(&resp)
-	if err != nil {
-		checkError(err)
-	}
-	var dsResponse utils.DsResponse
-	utils.UnMarshall(respBytes, dsResponse)
-
-	if len(resp.DnMap) != len(dsResponse.DnMap) {
-		t.Errorf("Unmatched numbers of TNs")
-		fmt.Println("len(resp.DnMap): ", len(resp.DnMap), "\nlen(dsResponse.DnMap): ", len(dsResponse.DnMap))
-	}
-}
 
 func TestListenAndServeTN(t *testing.T) {
 
@@ -68,26 +48,27 @@ func TestListenAndServeTN(t *testing.T) {
 
 	numTNs := 5
 	for i := 0; i < numTNs; i++ {
-		addr := "127.0.0.1:000" + string(i)
+		addr := "127.0.0.1:000" + strconv.Itoa(i)
 		key, _:= keyLibrary.GeneratePrivPubKey()
 		ds.TNs[addr] = key.PublicKey
 	}
 
-	TNs := mockTCRequest(uint16(numTNs), ds.PriKey.PublicKey)
+	TNs := sendTCRequest(uint16(numTNs))
 	for addr, key := range TNs {
 		fmt.Println(addr, " ", key)
 	}
 	if len(TNs) != numTNs {
-		t.Errorf("DS didn't provide enough TNs. Requested: ", numTNs, " Got: ", len(TNs))
+		t.Errorf("DS didn't provide enough TNs.")
+		fmt.Println("Requested: ", numTNs, "\nGot: ", len(TNs))
 	}
 }
 
-func mockTCRequest(numTNs uint16, key rsa.PublicKey) map[string]rsa.PublicKey {
-	_, err := keyLibrary.LoadPublicKey("../dirserver/public.pem")
+func sendTCRequest(numTNs uint16) map[string]rsa.PublicKey {
+	key, err := keyLibrary.LoadPublicKey("../dirserver/public.pem")
 	checkError(err)
 
 	clientConfig := utils.ClientConfig{
-		DSPublicKey:  	key,
+		DSPublicKey:  	*key,
 		MaxNumNodes: 	numTNs,
 		DSIp:			"localhost:8002",
 		ServerIp: 		"localhost:8004",

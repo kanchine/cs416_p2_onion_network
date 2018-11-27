@@ -34,7 +34,7 @@ type DirServer struct {
 	TNs    		map[string]rsa.PublicKey
 	Fd			utils.FD
 	NotifyCh	<-chan utils.FailureDetected
-	Mu     		*sync.Mutex
+	Mu     		*sync.RWMutex
 }
 
 func StartDS(Ip, PortForTN, PortForTC, PortForHB string) {
@@ -55,6 +55,7 @@ func NewDirServer(Ip, PortForTN, PortForTC, PortForHB string) *DirServer {
 	ds := new(DirServer)
 	ds.LoadPrivateKey()
 	ds.TNs = make(map[string]rsa.PublicKey)
+	ds.Mu = &sync.RWMutex{}
 	ds.Ip = Ip
 	ds.PortForTN = PortForTN
 	ds.PortForTC = PortForTC
@@ -272,8 +273,8 @@ func (ds *DirServer) RemoveTN(TNAddr string) {
 
 func (ds *DirServer) SetupCircuit(numTNs uint16) map[string]rsa.PublicKey {
 
-	//ds.Mu.Lock()
-	//defer ds.Mu.Unlock()
+	ds.Mu.Lock()
+	defer ds.Mu.Unlock()
 
 	if len(ds.TNs) <= int(numTNs) {
 		return ds.TNs

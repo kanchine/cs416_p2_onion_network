@@ -26,7 +26,7 @@ type Config struct {
 	DataBase map[string] string        // The key value pair for the data base
 }
 
-func Initialize(configFile string) (*Server, error) {
+func Initialize(configFile string, privateKeyFile string) (*Server, error) {
 
 	jsonFile, err := os.Open(configFile)
 
@@ -53,8 +53,7 @@ func Initialize(configFile string) (*Server, error) {
 	var config Config
 	err = json.Unmarshal(configData, &config)
 
-	// TODO: replace this with loading key from the config file
-	privateKey, err := keyLibrary.GeneratePrivPubKey()
+	privateKey, err := keyLibrary.LoadPrivateKey(privateKeyFile)
 
 	return &Server{privateKey, config.IncomingTcpAddr, config.DataBase, &sync.Mutex{}}, err
 }
@@ -69,8 +68,8 @@ func (s *Server) StartService() {
 
 	listener, err := net.ListenTCP(TCP_PROTO, localTcpAddr)
 
-
 	for {
+		fmt.Println("Start accepting connections at:", s.IpPort)
 		tcpConn, err := listener.AcceptTCP()
 		if err != nil {
 			fmt.Println("TCP connection failed with client:", tcpConn.RemoteAddr().String())
@@ -111,6 +110,8 @@ func (s *Server) connectionHandler(conn *net.TCPConn) {
 	encryptedData, err := keyLibrary.SymmKeyEncrypt(respData, req.SymmKey)
 
 	n, err := utils.WriteToConnection(conn, string(encryptedData))
+
+	fmt.Println("Server response sent to:", conn.RemoteAddr())
 
 	if err != nil {
 		fmt.Println("Server handler: response write failed")

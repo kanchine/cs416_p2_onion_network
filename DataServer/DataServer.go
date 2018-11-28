@@ -3,7 +3,6 @@ package DataServer
 import (
 	"../keyLibrary"
 	"../utils"
-	"crypto/rand"
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
@@ -55,8 +54,7 @@ func Initialize(configFile string) (*Server, error) {
 	err = json.Unmarshal(configData, &config)
 
 	// TODO: replace this with loading key from the config file
-	size := 1024
-	privateKey, err := rsa.GenerateKey(rand.Reader, size)
+	privateKey, err := keyLibrary.GeneratePrivPubKey()
 
 	return &Server{privateKey, config.IncomingTcpAddr, config.DataBase, &sync.Mutex{}}, err
 }
@@ -86,15 +84,7 @@ func (s *Server) StartService() {
 }
 
 func (s *Server) connectionHandler(conn *net.TCPConn) {
-
-	defer func() {
-		err := conn.Close()
-
-		if err != nil {
-			fmt.Print("Server handler: failed to close tcp connection.")
-		}
-	}()
-
+	// Note connection will be closed by the TN.
 
 	reqStr, err := utils.ReadFromConnection(conn)
 
@@ -127,7 +117,7 @@ func (s *Server) connectionHandler(conn *net.TCPConn) {
 		return
 	}
 
-	if n != len(encryptedData) {
+	if n != len(encryptedData) + 1 {
 		fmt.Println("Server handler: incorrect number of bytes written to the connection")
 		return
 	}

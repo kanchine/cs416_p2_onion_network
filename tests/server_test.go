@@ -3,11 +3,9 @@ package tests
 import (
 	"../DataServer"
 	"../TorClient"
+	"../keyLibrary"
 	"../utils"
-	"P2-q4d0b-a9h0b-i5g5-v3d0b/keyLibrary"
 	"crypto/rsa"
-	"encoding/json"
-	"fmt"
 	"net"
 	"testing"
 	"time"
@@ -62,21 +60,24 @@ func TestServerInit(t *testing.T) {
 
 func TestServerRequest(t *testing.T) {
 	server, _ := DataServer.Initialize("test.json")
-
+	key := "a"
+	expectedValue := "test1"
 	go server.StartService()
 
 	time.Sleep(2 * time.Second)
 
-	err := sendAndReceive(server.IpPort, server.Key.PublicKey)
+	value, err := sendAndReceive(server.IpPort, server.Key.PublicKey, key)
 
 	if err != nil {
 		t.Errorf("Unable to receive response from server.")
 	}
 
-	fmt.Println(server.IpPort)
+	if value != expectedValue {
+		t.Errorf("Actual value received %s, expected value is %s", value, expectedValue)
+	}
 }
 
-func sendAndReceive(serverIpPort string, serverPublicKey rsa.PublicKey) error {
+func sendAndReceive(serverIpPort string, serverPublicKey rsa.PublicKey, key string) (string, error) {
 	tcpLocalAddr, _ := net.ResolveTCPAddr("tcp", "127.0.0.1:8081")
 
 	tcpServerAddr, _ := net.ResolveTCPAddr("tcp", serverIpPort)
@@ -89,20 +90,42 @@ func sendAndReceive(serverIpPort string, serverPublicKey rsa.PublicKey) error {
 
 	order := []string{"server"}
 
-	onionbytes, symKeys := TorClient.CreateOnionMessage(order, myMap, "a")
+	onionbytes, symKeys := CreateEncryptedRequest(order, myMap, key)
 
 	_, _ = utils.WriteToConnection(tcpConn, string(onionbytes))
 
 	str, _ := utils.ReadFromConnection(tcpConn)
 
-	var res []byte
+
+
+	res := []byte(str)[:len(str) - 1]
 	for _, key := range symKeys {
-		res, _ = keyLibrary.SymmKeyDecrypt([]byte(str), key)
+		var err error
+		res, err = keyLibrary.SymmKeyDecrypt(res, key)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	var resp utils.Response
 
-	err := json.Unmarshal(res, &resp)
+	err := utils.UnMarshall(res, &resp)
 
-	return err
+	return resp.Value, err
+}
+
+func CreateEncryptedRequest(nodeOrder []string, tnMap map[string]rsa.PublicKey, reqKey string) ([]byte, [][]byte) {
+
+	symKeys := make([][]byte, 0)
+
+	ServerSymKey := keyLibrary.GenerateSymmKey()
+	request, _ := utils.Marshall(utils.Request{Key: reqKey, SymmKey: ServerSymKey})
+
+	symKeys = append(symKeys, ServerSymKey)
+
+	encryptedRequest := TorClient.EncryptPayload(request, tnMap[nodeOrder[len(nodeOrder)-1]])
+
+	marshalledRequest, _ := utils.Marshall(encryptedRequest)
+
+	return marshalledRequest,symKeys
 }

@@ -74,26 +74,26 @@ func SavePrivateKeyOnDisk(fileName string, key *rsa.PrivateKey) error {
 	return nil
 }
 
-//func SavePublicKeyOnDisk(fileName string, key *rsa.PublicKey) error {
-//
-//	file, err := os.Create(fileName)
-//	if err != nil {
-//		return err
-//	}
-//	defer file.Close()
-//
-//	var publicKey = &pem.Block{
-//		Type:  	"PUBLIC KEY",
-//		Bytes: 	x509.MarshalPKCS1PublicKey(key),
-//	}
-//
-//	err = pem.Encode(file, publicKey)
-//	if err != nil {
-//		return err
-//	}
-//
-//	return nil
-//}
+func SavePublicKeyOnDisk(fileName string, key *rsa.PublicKey) error {
+
+	file, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	var publicKey = &pem.Block{
+		Type:  	"PUBLIC KEY",
+		Bytes: 	x509.MarshalPKCS1PublicKey(key),
+	}
+
+	err = pem.Encode(file, publicKey)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 
 func LoadPrivateKey(fileName string) (*rsa.PrivateKey, error) {
@@ -112,21 +112,21 @@ func LoadPrivateKey(fileName string) (*rsa.PrivateKey, error) {
 	return key, nil
 }
 
-//func LoadPublicKey(fileName string) (*rsa.PublicKey, error) {
-//
-//	pemBytes, err := readPemFile(fileName)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	data, _ := pem.Decode(pemBytes)
-//	key, err := x509.ParsePKCS1PublicKey(data.Bytes)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return key, nil
-//}
+func LoadPublicKey(fileName string) (*rsa.PublicKey, error) {
+
+	pemBytes, err := readPemFile(fileName)
+	if err != nil {
+		return nil, err
+	}
+
+	data, _ := pem.Decode(pemBytes)
+	key, err := x509.ParsePKCS1PublicKey(data.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return key, nil
+}
 
 func readPemFile(fileName string) ([]byte, error) {
 

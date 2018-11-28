@@ -12,7 +12,7 @@ import (
 )
 
 func TestServerInit(t *testing.T) {
-	server, err := DataServer.Initialize("test.json")
+	server, err := DataServer.Initialize("test.json", "../DataServer/private.pem")
 
 	if err != nil {
 		t.Errorf("Server initializetion failed")
@@ -59,7 +59,7 @@ func TestServerInit(t *testing.T) {
 }
 
 func TestServerRequest(t *testing.T) {
-	server, _ := DataServer.Initialize("test.json")
+	server, _ := DataServer.Initialize("test.json","../DataServer/private.pem")
 	key := "a"
 	expectedValue := "test1"
 	go server.StartService()

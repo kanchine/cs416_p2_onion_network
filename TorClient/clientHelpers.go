@@ -15,7 +15,7 @@ const byteSize = 150
 func CreateOnionMessage(nodeOrder []string, tnMap map[string]rsa.PublicKey, reqKey string) ([]byte, [][]byte) {
 
 	var onionMessage []byte
-	symKeys := make([][]byte, len(nodeOrder))
+	symKeys := make([][]byte, 0)
 
 	ServerSymKey := keyLibrary.GenerateSymmKey()
 	request, _ := utils.Marshall(utils.Request{Key: reqKey, SymmKey: ServerSymKey})

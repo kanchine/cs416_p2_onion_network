@@ -2,8 +2,7 @@ package DataServer
 
 import (
 	"../keyLibrary"
-	"P2-q4d0b-a9h0b-i5g5-v3d0b/utils"
-	"bufio"
+	"../utils"
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/json"
@@ -97,27 +96,14 @@ func (s *Server) connectionHandler(conn *net.TCPConn) {
 	}()
 
 
-	data, err := readFromConnection(conn)
+	reqStr, err := utils.ReadFromConnection(conn)
 
 	if err != nil {
 		fmt.Println("Server handler: reading data from connection failed")
 		return
 	}
 
-	decryptedData, err := keyLibrary.PrivKeyDecrypt(s.Key, []byte(data))
-
-	if err != nil {
-		fmt.Println("Server handler: request decryption failed")
-		return
-	}
-
-	var req utils.Request
-	err = json.Unmarshal(decryptedData, &req)
-
-	if err != nil {
-		fmt.Println("Server handler: request unmarshal failed")
-		return
-	}
+	req := unmarshalServerRequest([]byte(reqStr), s.Key)
 
 	var resp utils.Response
 	s.LockDataBase.Lock()
@@ -134,7 +120,7 @@ func (s *Server) connectionHandler(conn *net.TCPConn) {
 
 	encryptedData, err := keyLibrary.SymmKeyEncrypt(respData, req.SymmKey)
 
-	n, err := writeToConnection(conn, string(encryptedData))
+	n, err := utils.WriteToConnection(conn, string(encryptedData))
 
 	if err != nil {
 		fmt.Println("Server handler: response write failed")
@@ -147,19 +133,32 @@ func (s *Server) connectionHandler(conn *net.TCPConn) {
 	}
 }
 
-//TODO: this function will be replaced by a utility function latter
-func readFromConnection(conn *net.TCPConn) (string, error) {
-	data, err := bufio.NewReader(conn).ReadString('\n')
+func unmarshalServerRequest(data []byte, serverKey *rsa.PrivateKey) utils.Request{
 
+	var serverBytes [][]byte
+
+	err := utils.UnMarshall(data, &serverBytes)
 	if err != nil {
-		return "", err
+		fmt.Println("Error unmarshal client requests bytes:", err)
 	}
 
-	return data, nil
-}
+	var decryptedServerBytes []byte
 
-//TODO: this function will be replaced by a utility function latter
-func writeToConnection (conn *net.TCPConn, json string) (int, error) {
-	n, werr := fmt.Fprintf(conn, json+"\n")
-	return n, werr
+	for i := range serverBytes {
+		decryptedBytePiece, err := keyLibrary.PrivKeyDecrypt(serverKey, serverBytes[i])
+		if err != nil {
+			fmt.Println("failed to decrypt client requests:", err)
+		}
+		decryptedServerBytes = append(decryptedServerBytes, decryptedBytePiece...)
+	}
+
+	var serverMessage utils.Request
+
+	err = utils.UnMarshall(decryptedServerBytes, &serverMessage)
+
+	if err != nil {
+		fmt.Println("Error unmarshal client requests:", err)
+	}
+
+	return serverMessage
 }

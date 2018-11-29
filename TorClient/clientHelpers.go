@@ -1,11 +1,12 @@
 package TorClient
 
 import (
-	"../keyLibrary"
-	"../utils"
 	"crypto/rsa"
 	"math/rand"
 	"time"
+
+	"../keyLibrary"
+	"../utils"
 )
 
 const byteSize = 150
@@ -26,22 +27,22 @@ func CreateOnionMessage(nodeOrder []string, tnMap map[string]rsa.PublicKey, reqK
 
 	marshalledRequest, _ := utils.Marshall(encryptedRequest)
 
-	for i := len(nodeOrder) - 2; i > -1; i -- {
+	for i := len(nodeOrder) - 2; i > -1; i-- {
 		var outerOnionMessage utils.Onion
 
 		symmKey := keyLibrary.GenerateSymmKey()
 		outerOnionMessage.SymmKey = symmKey
 		symKeys = append([][]byte{symmKey}, symKeys...)
 
-		if i == len(nodeOrder) - 2 {
+		if i == len(nodeOrder)-2 {
 			//this is onion message to the server
-			outerOnionMessage.NextIp = nodeOrder[len(nodeOrder) - 1]
+			outerOnionMessage.NextIp = nodeOrder[len(nodeOrder)-1]
 
 			outerOnionMessage.Payload = marshalledRequest
 
 			marshalledOnion, _ := utils.Marshall(outerOnionMessage)
 
-			encryptedOnion := EncryptPayload(marshalledOnion, tnMap[nodeOrder[len(nodeOrder) - 2 ]])
+			encryptedOnion := EncryptPayload(marshalledOnion, tnMap[nodeOrder[len(nodeOrder)-2]])
 
 			finalMarshalledOnion, _ := utils.Marshall(encryptedOnion)
 
@@ -78,9 +79,9 @@ func EncryptPayload(onionBytes []byte, key rsa.PublicKey) [][]byte {
 
 	counter := 0
 
-	for counter + byteSize - 1 < len(onionBytes) {
+	for counter+byteSize-1 < len(onionBytes) {
 
-		encryptedSlice, _ := keyLibrary.PubKeyEncrypt(&key, onionBytes[counter : counter + byteSize])
+		encryptedSlice, _ := keyLibrary.PubKeyEncrypt(&key, onionBytes[counter:counter+byteSize])
 
 		encryptedPayload = append(encryptedPayload, encryptedSlice)
 
@@ -127,7 +128,7 @@ func DetermineTnOrder(tnMap map[string]rsa.PublicKey) []string {
 
 	rand.Seed(time.Now().Unix())
 	for len(keys) > 1 {
-		i := rand.Intn(len(keys)-1)
+		i := rand.Intn(len(keys) - 1)
 		order = append(order, keys[i])
 
 		keys[i] = keys[len(keys)-1]

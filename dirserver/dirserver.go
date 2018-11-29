@@ -1,4 +1,4 @@
-package dirserver
+package main
 
 import (
 	"../keyLibrary"
@@ -37,6 +37,26 @@ type DirServer struct {
 	Mu     		*sync.RWMutex
 }
 
+func main() {
+
+	Ip := "localhost"
+	PortForTN := "8001"
+	PortForTC := "8002"
+	PortForHB := "8003"
+
+	if len(os.Args) == 5 {
+		Ip = os.Args[1]
+		PortForTN = os.Args[2]
+		PortForTC = os.Args[3]
+		PortForHB = os.Args[4]
+	} else if len(os.Args) != 1 {
+		log.Fatal("usage: go run ds.go [Ip] [PortForTN] [PortForTC] [PortForHB]")
+	}
+
+	StartDS(Ip, PortForTN, PortForTC, PortForHB)
+}
+
+
 func StartDS(Ip, PortForTN, PortForTC, PortForHB string) {
 
 	fmt.Println("==========================================================")
@@ -66,7 +86,7 @@ func NewDirServer(Ip, PortForTN, PortForTC, PortForHB string) *DirServer {
 
 func (ds *DirServer) LoadPrivateKey() {
 
-	key, err := keyLibrary.LoadPrivateKey("../dirserver/private.pem")
+	key, err := keyLibrary.LoadPrivateKey("./dirserver/private.pem")
 	checkError(err)
 
 	ds.PriKey = key

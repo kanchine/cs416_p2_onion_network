@@ -19,22 +19,17 @@ type TorNode struct {
 	timeoutMillis int
 }
 
-func InitTorNode(dsIPPort string, listenIPPort string, fdListenIPPort string,
-	privateKeyPath string, publicKeyPath string, timeoutMillis int) error {
+func InitTorNode(dsIPPort string, listenIPPort string, fdListenIPPort string, timeoutMillis int) error {
 
 	// Initialize variables
-	privateKey, pkerror := keyLibrary.LoadPrivateKey(privateKeyPath)
+	privateKey, pkerror := keyLibrary.GeneratePrivPubKey()
 	if pkerror != nil {
-		fmt.Printf("Could not init tor node. Failed to load private key: %s\n", pkerror)
+		fmt.Printf("Could not init tor node. Failed to generate private key: %s\n", pkerror)
 		return pkerror
 	}
 
 	// load necessary keys
-	publicKey, pubkerror := keyLibrary.LoadPublicKey(publicKeyPath)
-	if pubkerror != nil {
-		fmt.Printf("Could not init tor node. Failed to load public key: %s\n", pubkerror)
-		return pubkerror
-	}
+	publicKey := &privateKey.PublicKey
 
 	// start failure detector
 	source := rand.NewSource(time.Now().UnixNano())

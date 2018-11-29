@@ -1,6 +1,8 @@
 package main
 
 import (
+	"../keyLibrary"
+	"../utils"
 	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
@@ -10,9 +12,6 @@ import (
 	"os"
 	"sync"
 	"time"
-
-	"../keyLibrary"
-	"../utils"
 )
 
 var (
@@ -93,6 +92,7 @@ func (ds *DirServer) LoadPrivateKey() {
 }
 
 func (ds *DirServer) InitFD() {
+
 	fd, notifyCh, err := utils.Initialize(epochNonce, chCapacity)
 	checkError(err)
 
@@ -161,14 +161,14 @@ func (ds *DirServer) HandleTN(conn *net.TCPConn) {
 		}
 	}()
 
-	reqStr, err := utils.ReadFromConnection(conn)
+	reqBytes, err := utils.TCPRead(conn)
 	if err != nil {
 		printError("HandleTN: reading request from connection failed", err)
 		return
 	}
 
 	var req utils.NetworkJoinRequest
-	err = utils.UnMarshall([]byte(reqStr), &req)
+	err = utils.UnMarshall(reqBytes, &req)
 	if err != nil {
 		printError("HandleTN: request unmarshal failed", err)
 		return
@@ -193,7 +193,7 @@ func (ds *DirServer) HandleTN(conn *net.TCPConn) {
 		return
 	}
 
-	_, err = utils.WriteToConnection(conn, string(respBytes))
+	_, err = utils.TCPWrite(conn, respBytes)
 	if err != nil {
 		printError("HandleTN: response write failed", err)
 		return
@@ -214,14 +214,13 @@ func (ds *DirServer) HandleTC(conn *net.TCPConn) {
 		}
 	}()
 
-	buf := make([]byte, 2048)
-	n, err := conn.Read(buf)
+	reqBytes, err := utils.TCPRead(conn)
 	if err != nil {
 		printError("HandleTC: reading request from connection failed", err)
 		return
 	}
 
-	decryptedReq, err := keyLibrary.PrivKeyDecrypt(ds.PriKey, buf[:n])
+	decryptedReq, err := keyLibrary.PrivKeyDecrypt(ds.PriKey, reqBytes)
 	if err != nil {
 		printError("HandleTC: request decryption failed", err)
 		return
@@ -247,7 +246,7 @@ func (ds *DirServer) HandleTC(conn *net.TCPConn) {
 	}
 
 	encryptedResp, err := keyLibrary.SymmKeyEncryptBase64(respBytes, req.SymmKey)
-	n, err = conn.Write(encryptedResp)
+	_, err = utils.TCPWrite(conn, encryptedResp)
 	if err != nil {
 		printError("HandleTC: response write failed", err)
 		return

@@ -20,6 +20,8 @@ type TorNode struct {
 }
 
 func InitTorNode(dsIPPort string, listenIPPort string, fdListenIPPort string, timeoutMillis int) error {
+	fmt.Println("==========================================================")
+	fmt.Printf("Initalizing Tor node with DS: %s, listening at: %s, fdlib listening at %s, timeout in milliseconds: %d\n", dsIPPort, listenIPPort, fdListenIPPort, timeoutMillis)
 
 	// Initialize variables
 	privateKey, pkerror := keyLibrary.GeneratePrivPubKey()
@@ -67,6 +69,7 @@ func InitTorNode(dsIPPort string, listenIPPort string, fdListenIPPort string, ti
 		return lerr
 	}
 
+	fmt.Println("Tor Node successfully initialized! Kicking off onion handler daemon")
 	go onionHandler(listener, privateKey, timeoutMillis)
 
 	return nil

@@ -5,8 +5,8 @@ import (
 	"math/rand"
 	"time"
 
-	"../keyLibrary"
-	"../utils"
+	"../../keyLibrary"
+	"../../utils"
 )
 
 const byteSize = 150
@@ -36,7 +36,7 @@ func CreateOnionMessage(nodeOrder []string, tnMap map[string]rsa.PublicKey, reqK
 
 		if i == len(nodeOrder)-2 {
 			//this is onion message to the server
-			outerOnionMessage.NextIp = nodeOrder[len(nodeOrder)-1]
+			outerOnionMessage.NextIpPort = nodeOrder[len(nodeOrder)-1]
 
 			outerOnionMessage.Payload = marshalledRequest
 
@@ -50,7 +50,7 @@ func CreateOnionMessage(nodeOrder []string, tnMap map[string]rsa.PublicKey, reqK
 
 		} else {
 
-			outerOnionMessage.NextIp = nodeOrder[i+1]
+			outerOnionMessage.NextIpPort = nodeOrder[i+1]
 
 			nodePublicKey := tnMap[nodeOrder[i]]
 

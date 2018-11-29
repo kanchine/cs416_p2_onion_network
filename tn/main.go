@@ -16,7 +16,7 @@ func main() {
 		return
 	}
 
-	dsIPPort := "127.0.0.1:3000"
+	dsIPPort := "127.0.0.1:8001"
 	listenIPPort := "127.0.0.1:4001"
 	fdListenIPPort := "127.0.0.1:4002"
 	timeOutMillis := 1000
@@ -33,7 +33,9 @@ func main() {
 		}
 	}
 
-	fmt.Println("launching tor node")
 	tnerr := tornode.InitTorNode(dsIPPort, listenIPPort, fdListenIPPort, timeOutMillis)
-	fmt.Println(tnerr)
+	if tnerr != nil {
+		fmt.Println(tnerr)
+	}
+	<-make(chan bool)
 }

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"../keyLibrary"
-	"../utils"
 	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
@@ -12,12 +10,15 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"../keyLibrary"
+	"../utils"
 )
 
 var (
-	epochNonce uint64 = 12345
-	chCapacity uint8 = 5
-	lostMsgThresh uint8 = 5
+	epochNonce    uint64 = 12345
+	chCapacity    uint8  = 5
+	lostMsgThresh uint8  = 5
 
 	Trace = log.New(os.Stdout, "[TRACE] ", 0)
 	//Trace = log.New(ioutil.Discard, "[TRACE] ", log.Ldate|log.Ltime)
@@ -26,15 +27,15 @@ var (
 )
 
 type DirServer struct {
-	Ip     		string
-	PortForTN	string
-	PortForTC	string
-	PortForHB	string
-	PriKey 		*rsa.PrivateKey
-	TNs    		map[string]rsa.PublicKey
-	Fd			utils.FD
-	NotifyCh	<-chan utils.FailureDetected
-	Mu     		*sync.RWMutex
+	Ip        string
+	PortForTN string
+	PortForTC string
+	PortForHB string
+	PriKey    *rsa.PrivateKey
+	TNs       map[string]rsa.PublicKey
+	Fd        utils.FD
+	NotifyCh  <-chan utils.FailureDetected
+	Mu        *sync.RWMutex
 }
 
 func main() {
@@ -55,7 +56,6 @@ func main() {
 
 	StartDS(Ip, PortForTN, PortForTC, PortForHB)
 }
-
 
 func StartDS(Ip, PortForTN, PortForTC, PortForHB string) {
 
@@ -108,7 +108,7 @@ func (ds *DirServer) StartService() {
 
 func (ds *DirServer) ListenAndServeTN() {
 
-	localTcpAddr, err := net.ResolveTCPAddr("tcp", ds.Ip + ":" + ds.PortForTN)
+	localTcpAddr, err := net.ResolveTCPAddr("tcp", ds.Ip+":"+ds.PortForTN)
 	checkError(err)
 
 	listener, err := net.ListenTCP("tcp", localTcpAddr)
@@ -131,7 +131,7 @@ func (ds *DirServer) ListenAndServeTN() {
 
 func (ds *DirServer) ListenAndServeTC() {
 
-	localTcpAddr, err := net.ResolveTCPAddr("tcp", ds.Ip + ":" + ds.PortForTC)
+	localTcpAddr, err := net.ResolveTCPAddr("tcp", ds.Ip+":"+ds.PortForTC)
 	checkError(err)
 
 	listener, err := net.ListenTCP("tcp", localTcpAddr)
@@ -175,13 +175,13 @@ func (ds *DirServer) HandleTN(conn *net.TCPConn) {
 	}
 
 	ds.Mu.Lock()
-	ds.TNs[req.TorIp] = req.PubKey
+	ds.TNs[req.TorIpPort] = req.PubKey
 	ds.Mu.Unlock()
 
 	var resp utils.NetworkJoinResponse
 	resp.Status = true
 
-	err = ds.Fd.AddMonitor(ds.Ip + ":" + ds.PortForHB, req.FdlibIp, lostMsgThresh)
+	err = ds.Fd.AddMonitor(ds.Ip+":"+ds.PortForHB, req.FdlibIpPort, lostMsgThresh)
 	if err != nil {
 		printError("HandleTN: AddMonitor failed", err)
 		resp.Status = false
@@ -200,8 +200,8 @@ func (ds *DirServer) HandleTN(conn *net.TCPConn) {
 	}
 
 	if resp.Status {
-		Trace.Println("TN: " + req.TorIp + " has joined the Tor network")
-		Trace.Println("Start monitoring TN: ", req.FdlibIp)
+		Trace.Println("TN: " + req.TorIpPort + " has joined the Tor network")
+		Trace.Println("Start monitoring TN: ", req.FdlibIpPort)
 	}
 }
 
@@ -272,13 +272,13 @@ func (ds *DirServer) RemoveTN(TNAddr string) {
 
 	ipToRemove, _, err := net.SplitHostPort(TNAddr)
 	if err != nil {
-		printError("Failed to get ip of the TN to remove: " + TNAddr, err)
+		printError("Failed to get ip of the TN to remove: "+TNAddr, err)
 	}
 
 	for addr := range ds.TNs {
 		ip, _, err := net.SplitHostPort(addr)
 		if err != nil {
-			printError("Failed to get ip of the TN to remove: " + TNAddr, err)
+			printError("Failed to get ip of the TN to remove: "+TNAddr, err)
 			continue
 		}
 
@@ -305,7 +305,7 @@ func (ds *DirServer) SetupCircuit(numTNs uint16) map[string]rsa.PublicKey {
 
 	mathrand.Seed(time.Now().Unix())
 	for numTNs > 0 {
-		i := mathrand.Intn(len(keys)-1)
+		i := mathrand.Intn(len(keys) - 1)
 		circuit[keys[i]] = ds.TNs[keys[i]]
 		keys[i] = keys[len(keys)-1]
 		keys = keys[:len(keys)-1]

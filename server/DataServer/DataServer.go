@@ -1,8 +1,6 @@
 package DataServer
 
 import (
-	"../keyLibrary"
-	"../utils"
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
@@ -10,20 +8,23 @@ import (
 	"net"
 	"os"
 	"sync"
+
+	"../../keyLibrary"
+	"../../utils"
 )
 
 const TCP_PROTO = "tcp"
 
 type Server struct {
-	Key *rsa.PrivateKey                // Private key of the server, the public key is also in this data structure.
-	IpPort string                      // The ip port the server will be listening for connection on.
-	DataBase map[string] string        // The key value pair this database stores.
-	LockDataBase *sync.Mutex           // Lock to ensure synchronized database access.
+	Key          *rsa.PrivateKey   // Private key of the server, the public key is also in this data structure.
+	IpPort       string            // The ip port the server will be listening for connection on.
+	DataBase     map[string]string // The key value pair this database stores.
+	LockDataBase *sync.Mutex       // Lock to ensure synchronized database access.
 }
 
 type Config struct {
-	IncomingTcpAddr string             // The ip port the server will be listening for connection on
-	DataBase map[string] string        // The key value pair for the data base
+	IncomingTcpAddr string            // The ip port the server will be listening for connection on
+	DataBase        map[string]string // The key value pair for the data base
 }
 
 func Initialize(configFile string, privateKeyFile string) (*Server, error) {
@@ -75,7 +76,7 @@ func (s *Server) StartService() {
 			fmt.Println("TCP connection failed with client:", tcpConn.RemoteAddr().String())
 			continue
 		} else {
-			fmt.Println("Incoming connection established with client:",tcpConn.RemoteAddr().String())
+			fmt.Println("Incoming connection established with client:", tcpConn.RemoteAddr().String())
 		}
 
 		go s.connectionHandler(tcpConn)
@@ -118,13 +119,13 @@ func (s *Server) connectionHandler(conn *net.TCPConn) {
 		return
 	}
 
-	if n != len(encryptedData) + 1 {
+	if n != len(encryptedData)+1 {
 		fmt.Println("Server handler: incorrect number of bytes written to the connection")
 		return
 	}
 }
 
-func unmarshalServerRequest(data []byte, serverKey *rsa.PrivateKey) utils.Request{
+func unmarshalServerRequest(data []byte, serverKey *rsa.PrivateKey) utils.Request {
 
 	var serverBytes [][]byte
 

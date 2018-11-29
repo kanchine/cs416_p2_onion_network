@@ -1,11 +1,13 @@
 package main
 
 import (
-	"../DataServer"
 	"fmt"
 	"log"
 	"os"
+
+	"./DataServer"
 )
+
 func main() {
 	var configFile string
 

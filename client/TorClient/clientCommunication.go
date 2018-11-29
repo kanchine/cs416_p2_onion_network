@@ -1,15 +1,16 @@
 package TorClient
 
 import (
-	"../keyLibrary"
-	"../utils"
 	"bufio"
 	"crypto/rsa"
 	"fmt"
 	"net"
+
+	"../../keyLibrary"
+	"../../utils"
 )
 
-func contactDsSerer(DSIp string, numNodes uint16, dsPublicKey rsa.PublicKey) map[string]rsa.PublicKey {
+func ContactDsSerer(DSIp string, numNodes uint16, dsPublicKey rsa.PublicKey) map[string]rsa.PublicKey {
 
 	conn := getTcpConnection(DSIp)
 
@@ -19,11 +20,11 @@ func contactDsSerer(DSIp string, numNodes uint16, dsPublicKey rsa.PublicKey) map
 
 }
 
-func sendOnionMessage(t1 string, onion []byte, symmKeys [][]byte ) string {
+func SendOnionMessage(t1 string, onion []byte, symmKeys [][]byte) string {
 
 	conn := getTcpConnection(t1)
 
-	fmt.Fprint(conn, string(onion) + "\n")
+	fmt.Fprint(conn, string(onion)+"\n")
 
 	return readResponse(conn, symmKeys)
 }

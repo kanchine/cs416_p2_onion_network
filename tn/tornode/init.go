@@ -29,16 +29,16 @@ func contactDS(dsIPPort string, TorIPPort string, fdlibIPPort string, pubKey *rs
 	if merr != nil {
 		return false, merr
 	}
-	_, werr := utils.WriteToConnection(conn, string(payload))
+	_, werr := utils.TCPWrite(conn, payload)
 	if werr != nil {
 		return false, werr
 	}
-	responsePayload, rerr := utils.ReadFromConnection(conn)
+	responsePayload, rerr := utils.TCPRead(conn)
 	if rerr != nil {
 		return false, rerr
 	}
 	response := &utils.NetworkJoinResponse{}
-	umerr := utils.UnMarshall([]byte(responsePayload), response)
+	umerr := utils.UnMarshall(responsePayload, response)
 	if umerr != nil {
 		return false, umerr
 	}

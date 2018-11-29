@@ -14,4 +14,5 @@ Tor Network - Protect Your Identity!
 
 ## How to run tor node
 1. go run tn/main.go [dsIPPort] [listenIPPort] [fdListenIPPort] [timeOutMillis]
-   (Default: dsIPPort=127.0.0.1:8001, listenIPPort=127.0.0.1:4001, fdListenIPPort=127.0.0.1:4002, timeOutMillis=1000)
+
+(Default: dsIPPort=127.0.0.1:8001, listenIPPort=127.0.0.1:4001, fdListenIPPort=127.0.0.1:4002, timeOutMillis=1000)

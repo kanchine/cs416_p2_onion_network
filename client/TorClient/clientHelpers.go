@@ -97,6 +97,8 @@ func EncryptPayload(onionBytes []byte, key rsa.PublicKey) [][]byte {
 
 func DecryptServerResponse(onionBytes []byte, symmKeys [][]byte) string {
 
+	currBytes := onionBytes
+
 	for _, key := range symmKeys {
 		decryptedOnionBytes, err := keyLibrary.SymmKeyDecrypt(onionBytes, key)
 
@@ -111,11 +113,11 @@ func DecryptServerResponse(onionBytes []byte, symmKeys [][]byte) string {
 			panic("can not unmarshal onion")
 		}
 
-		//onionBytes = unmarshalledOnion.Payload
+		currBytes = unmarshalledOnion.Payload
 	}
 
 	var resObj utils.Response
-	utils.UnMarshall(onionBytes, resObj)
+	utils.UnMarshall(currBytes, resObj)
 
 	return string(resObj.Value)
 }

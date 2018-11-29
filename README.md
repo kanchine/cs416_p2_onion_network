@@ -6,5 +6,12 @@ Tor Network - Protect Your Identity!
   (Default: Ip=localhost, PortForTN=8001, PortForTC=8002, PortForHB=8003)
    
 ## How to start Data Server
-1. **cd** to "P2-q4d0b-a9h0b-i5g5-v3d0b/main"
-2. Run "go run server.go configFilePath"
+1. Run "go run server/server.go configFilePath"
+
+
+## How to run tor client
+1. go run client/client.go client.json keyToFetch
+
+## How to run tor node
+1. go run tn/main.go [dsIPPort] [listenIPPort] [fdListenIPPort] [timeOutMillis]
+   (Default: dsIPPort=127.0.0.1:8001, listenIPPort=127.0.0.1:4001, fdListenIPPort=127.0.0.1:4002, timeOutMillis=1000)

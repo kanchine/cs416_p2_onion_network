@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 	"time"
+
+	"../../utils"
 )
 
 // listening for initial onion messages
@@ -22,7 +24,7 @@ func onionHandler(listener *net.TCPListener, privateKey *rsa.PrivateKey, timeout
 }
 
 func handleNewCircuitConn(newCircuitConn *net.TCPConn, privateKey *rsa.PrivateKey, timeoutMillis int) {
-	rawBytes, rerr := tcpRead(newCircuitConn)
+	rawBytes, rerr := utils.TCPRead(newCircuitConn)
 
 	if rerr != nil {
 		fmt.Printf("TorNode: WARNING read from connection error: %s\n", rerr)
@@ -52,7 +54,7 @@ func handleNewCircuitConn(newCircuitConn *net.TCPConn, privateKey *rsa.PrivateKe
 }
 
 func forwardNextHelper(to *net.TCPConn, payload []byte) {
-	_, err := tcpWrite(to, payload)
+	_, err := utils.TCPWrite(to, payload)
 	if err != nil {
 		fmt.Printf("TorNode: WARNING forward onion to next hop: %s\n", err)
 	}
@@ -66,7 +68,7 @@ func forwardBackHelper(from *net.TCPConn, to *net.TCPConn, symmKey []byte, timeo
 		fmt.Printf("TorNode: WARNING failed to set read deadline: %s\n", derr)
 		return
 	}
-	payload, rerr := tcpRead(from)
+	payload, rerr := utils.TCPRead(from)
 
 	if dpassederr, ok := rerr.(net.Error); ok && dpassederr.Timeout() {
 		fmt.Printf("TorNode: WARNING waiting data from %s timeout. Tearing down forwarding from %s to %s\n", from.RemoteAddr(), from.RemoteAddr(), to.RemoteAddr())
@@ -85,7 +87,7 @@ func forwardBackHelper(from *net.TCPConn, to *net.TCPConn, symmKey []byte, timeo
 		return
 	}
 
-	_, werr := tcpWrite(to, forwardPayload)
+	_, werr := utils.TCPWrite(to, forwardPayload)
 	if werr != nil {
 		fmt.Printf("TorNode: WARNING failed to forward previous hop: %s\n", werr)
 		return

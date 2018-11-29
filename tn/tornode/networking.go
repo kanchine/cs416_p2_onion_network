@@ -2,32 +2,9 @@ package tornode
 
 import (
 	"math/rand"
-	"net"
 	"strconv"
 	"time"
 )
-
-func tcpRead(from *net.TCPConn) ([]byte, error) {
-	bytes := make([]byte, 0)
-	chunkCap := 1024
-	chunk := make([]byte, chunkCap)
-
-	for {
-		size, rerr := from.Read(chunk)
-		if rerr != nil {
-			return nil, rerr
-		}
-		bytes = append(bytes, chunk[:size]...)
-		if size < chunkCap {
-			break
-		}
-	}
-	return bytes, nil
-}
-
-func tcpWrite(to *net.TCPConn, payload []byte) (int, error) {
-	return to.Write(payload)
-}
 
 // GetNewUnusedPort generate a random local ip port
 func getNewUnusedPort() string {

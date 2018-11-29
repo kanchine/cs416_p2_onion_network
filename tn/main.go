@@ -12,7 +12,7 @@ func main() {
 	args := os.Args[1:]
 
 	if !(len(args) == 0 || len(args) == 4) {
-		fmt.Println("Usage: go run tn/main.go [dsIPPort] [listenIPPort] [fdListenIPPort] [private key path] [public key path] [timeOutMillis]")
+		fmt.Println("Usage: go run tn/main.go [dsIPPort] [listenIPPort] [fdListenIPPort] [timeOutMillis]")
 		return
 	}
 
@@ -36,6 +36,7 @@ func main() {
 	tnerr := tornode.InitTorNode(dsIPPort, listenIPPort, fdListenIPPort, timeOutMillis)
 	if tnerr != nil {
 		fmt.Println(tnerr)
+	} else {
+		<-make(chan bool)
 	}
-	<-make(chan bool)
 }

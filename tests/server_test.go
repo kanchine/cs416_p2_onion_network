@@ -1,9 +1,9 @@
 package tests
 
 import (
-	"../DataServer"
-	"../TorClient"
+	"../client/TorClient"
 	"../keyLibrary"
+	"../server/DataServer"
 	"../utils"
 	"crypto/rsa"
 	"net"
@@ -12,7 +12,7 @@ import (
 )
 
 func TestServerInit(t *testing.T) {
-	server, err := DataServer.Initialize("test.json", "../DataServer/private.pem")
+	server, err := DataServer.Initialize("test.json", "../server/DataServer/private.pem")
 
 	if err != nil {
 		t.Errorf("Server initializetion failed")
@@ -59,7 +59,7 @@ func TestServerInit(t *testing.T) {
 }
 
 func TestServerRequest(t *testing.T) {
-	server, _ := DataServer.Initialize("test.json","../DataServer/private.pem")
+	server, _ := DataServer.Initialize("test.json","../server/DataServer/private.pem")
 	key := "a"
 	expectedValue := "test1"
 	go server.StartService()
@@ -92,13 +92,10 @@ func sendAndReceive(serverIpPort string, serverPublicKey rsa.PublicKey, key stri
 
 	onionbytes, symKeys := CreateEncryptedRequest(order, myMap, key)
 
-	_, _ = utils.WriteToConnection(tcpConn, string(onionbytes))
+	_, _ = utils.TCPWrite(tcpConn, onionbytes)
 
-	str, _ := utils.ReadFromConnection(tcpConn)
+	res, _ := utils.TCPRead(tcpConn)
 
-
-
-	res := []byte(str)[:len(str) - 1]
 	for _, key := range symKeys {
 		var err error
 		res, err = keyLibrary.SymmKeyDecrypt(res, key)

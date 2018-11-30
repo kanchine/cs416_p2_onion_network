@@ -86,14 +86,14 @@ func (s *Server) StartService() {
 func (s *Server) connectionHandler(conn *net.TCPConn) {
 	// Note connection will be closed by the TN.
 
-	reqStr, err := utils.ReadFromConnection(conn)
+	reqEncrypt, err := utils.TCPRead(conn)
 
 	if err != nil {
 		fmt.Println("Server handler: reading data from connection failed")
 		return
 	}
 
-	req := unmarshalServerRequest([]byte(reqStr), s.Key)
+	req := unmarshalServerRequest(reqEncrypt, s.Key)
 
 	var resp utils.Response
 	s.LockDataBase.Lock()
@@ -110,7 +110,7 @@ func (s *Server) connectionHandler(conn *net.TCPConn) {
 
 	encryptedData, err := keyLibrary.SymmKeyEncrypt(respData, req.SymmKey)
 
-	n, err := utils.WriteToConnection(conn, string(encryptedData))
+	n, err := utils.TCPWrite(conn, encryptedData)
 
 	fmt.Println("Server response sent to:", conn.RemoteAddr())
 
@@ -119,7 +119,7 @@ func (s *Server) connectionHandler(conn *net.TCPConn) {
 		return
 	}
 
-	if n != len(encryptedData)+1 {
+	if n != len(encryptedData) {
 		fmt.Println("Server handler: incorrect number of bytes written to the connection")
 		return
 	}

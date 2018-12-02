@@ -21,7 +21,7 @@ func main() {
 	fdListenIPPort := "127.0.0.1:4002"
 	timeOutMillis := 1000
 
-	if len(args) == 6 {
+	if len(args) == 4 {
 		dsIPPort = args[0]
 		listenIPPort = args[1]
 		fdListenIPPort = args[2]

@@ -2,8 +2,8 @@
 Tor Network - Protect Your Identity!
 
 ## How to start Diretory_Server
-1. Run "go run dirserver/dirserver.go [Ip] [PortForTN] [PortForTC] [PortForHB]"   
-  (Default: Ip=localhost, PortForTN=8001, PortForTC=8002, PortForHB=8003)
+Run "go run dirserver/dirserver.go [Ip] [PortForTN] [PortForTC]"   
+(Default: Ip=localhost, PortForTN=8001, PortForTC=8002)
    
 ## How to start Data Server
 1. Run "go run server/server.go configFilePath"

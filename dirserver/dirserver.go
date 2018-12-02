@@ -29,7 +29,6 @@ type DirServer struct {
 	Ip        string
 	PortForTN string
 	PortForTC string
-	PortForHB string
 	PriKey    *rsa.PrivateKey
 	TNs       map[string]rsa.PublicKey
 	Fd        utils.FD
@@ -42,26 +41,24 @@ func main() {
 	Ip := "localhost"
 	PortForTN := "8001"
 	PortForTC := "8002"
-	PortForHB := "8003"
 
-	if len(os.Args) == 5 {
+	if len(os.Args) == 4 {
 		Ip = os.Args[1]
 		PortForTN = os.Args[2]
 		PortForTC = os.Args[3]
-		PortForHB = os.Args[4]
 	} else if len(os.Args) != 1 {
-		log.Fatal("usage: go run ds.go [Ip] [PortForTN] [PortForTC] [PortForHB]")
+		log.Fatal("usage: go run ds.go [Ip] [PortForTN] [PortForTC]")
 	}
 
-	StartDS(Ip, PortForTN, PortForTC, PortForHB)
+	StartDS(Ip, PortForTN, PortForTC)
 }
 
-func StartDS(Ip, PortForTN, PortForTC, PortForHB string) {
+func StartDS(Ip, PortForTN, PortForTC string) {
 
 	fmt.Println("==========================================================")
 	fmt.Println("Initializing DS...")
 
-	ds := NewDirServer(Ip, PortForTN, PortForTC, PortForHB)
+	ds := NewDirServer(Ip, PortForTN, PortForTC)
 	fmt.Println("DS setup is complete")
 
 	ds.InitFD()
@@ -69,7 +66,7 @@ func StartDS(Ip, PortForTN, PortForTC, PortForHB string) {
 	ds.StartMonitoring()
 }
 
-func NewDirServer(Ip, PortForTN, PortForTC, PortForHB string) *DirServer {
+func NewDirServer(Ip, PortForTN, PortForTC string) *DirServer {
 
 	ds := new(DirServer)
 	ds.LoadPrivateKey()
@@ -78,7 +75,6 @@ func NewDirServer(Ip, PortForTN, PortForTC, PortForHB string) *DirServer {
 	ds.Ip = Ip
 	ds.PortForTN = PortForTN
 	ds.PortForTC = PortForTC
-	ds.PortForHB = PortForHB
 
 	return ds
 }
@@ -181,7 +177,7 @@ func (ds *DirServer) HandleTN(conn *net.TCPConn) {
 	var resp utils.NetworkJoinResponse
 	resp.Status = true
 
-	err = ds.Fd.AddMonitor(ds.Ip+":"+ds.PortForHB, req.FdlibIpPort, lostMsgThresh)
+	err = ds.Fd.AddMonitor(ds.Ip+":0", req.FdlibIpPort, lostMsgThresh)
 	if err != nil {
 		printError("HandleTN: AddMonitor failed", err)
 		resp.Status = false

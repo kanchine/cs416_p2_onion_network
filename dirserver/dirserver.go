@@ -1,8 +1,6 @@
 package main
 
 import (
-	"../keyLibrary"
-	"../utils"
 	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
@@ -12,12 +10,15 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"../keyLibrary"
+	"../utils"
 )
 
 var (
 	epochNonce    uint64 = 12345
-	chCapacity    uint8  = 5
-	lostMsgThresh uint8  = 5
+	chCapacity    uint8  = 50
+	lostMsgThresh uint8  = 50
 
 	Trace = log.New(os.Stdout, "[TRACE] ", 0)
 	//Trace = log.New(ioutil.Discard, "[TRACE] ", log.Ldate|log.Ltime)

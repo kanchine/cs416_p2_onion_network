@@ -30,6 +30,7 @@ func SendOnionMessage(t1 string, onion []byte, symmKeys [][]byte) (string, error
 	if connErr != nil {
 		return "", connErr
 	}
+	fmt.Printf("Client: Sending %d bytes onion message\n", len(onion))
 
 	utils.TCPWrite(conn, onion)
 

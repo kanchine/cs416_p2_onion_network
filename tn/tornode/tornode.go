@@ -47,7 +47,7 @@ func InitTorNode(dsIPPort string, listenIPPort string, fdListenIPPort string, ti
 	fdresErr := fd.StartResponding(fdListenIPPort)
 	if fdresErr != nil {
 		fmt.Printf("TorNode: failed to start responding for error: %s\n", fdresErr)
-		return fdliberr
+		return fdresErr
 	}
 
 	// join network
@@ -71,7 +71,7 @@ func InitTorNode(dsIPPort string, listenIPPort string, fdListenIPPort string, ti
 		return lerr
 	}
 
-	fmt.Println("Tor Node successfully initialized! Kicking off onion handler daemon")
+	fmt.Printf("Tor Node successfully initialized! Kicking off onion handler daemon...\n\n\n")
 	go onionHandler(listener, privateKey, timeoutMillis)
 
 	return nil

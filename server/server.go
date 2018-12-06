@@ -17,10 +17,11 @@ func main() {
 		log.Fatal("usage: go run server.go [ConfigFile]")
 	}
 
-	server, err := DataServer.Initialize(configFile, "./DataServer/private.pem")
+	server, err := DataServer.Initialize(configFile, "./server/DataServer/private.pem")
 
 	if err != nil {
 		fmt.Println("Server failed to start, exiting...")
+		fmt.Println(err)
 		return
 	}
 

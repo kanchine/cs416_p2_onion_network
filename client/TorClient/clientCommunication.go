@@ -10,27 +10,37 @@ import (
 	"../../utils"
 )
 
-func ContactDsSerer(DSIp string, numNodes uint16, dsPublicKey rsa.PublicKey) map[string]rsa.PublicKey {
+func ContactDsSerer(DSIp string, numNodes uint16, dsPublicKey rsa.PublicKey) (map[string]rsa.PublicKey, error) {
 
-	conn := getTcpConnection(DSIp)
+	conn, connErr := getTCPConnection(DSIp)
+
+	if connErr != nil {
+		return nil, connErr
+	}
 
 	symmKey := sendReqToDs(numNodes, dsPublicKey, conn)
 
-	return readResFromDs(conn, symmKey)
+	return readResFromDs(conn, symmKey), nil
 
 }
 
-func SendOnionMessage(t1 string, onion []byte, symmKeys [][]byte) string {
+func SendOnionMessage(t1 string, onion []byte, symmKeys [][]byte) (string, error) {
 
-	conn := getTcpConnection(t1)
+	conn, connErr := getTCPConnection(t1)
 
+	if connErr != nil {
+		return "", connErr
+	}
+
+	// TODO: use networking util tcp send
 	fmt.Fprint(conn, string(onion)+"\n")
 
-	return readResponse(conn, symmKeys)
+	return readResponse(conn, symmKeys), nil
 }
 
 func readResponse(conn net.Conn, symmKeys [][]byte) string {
 
+	// TODO: use networking util tcp read
 	json, err := bufio.NewReader(conn).ReadString('\n')
 
 	if err != nil {
@@ -80,13 +90,6 @@ func readResFromDs(conn net.Conn, symmKey []byte) map[string]rsa.PublicKey {
 	return dsResponse.DnMap
 }
 
-func getTcpConnection(ip string) net.Conn {
-
-	tcpConn, err := net.Dial("tcp", ip)
-	if err != nil {
-		panic("Could not resolve DS IP")
-	}
-
-	return tcpConn
-
+func getTCPConnection(ip string) (net.Conn, error) {
+	return net.Dial("tcp", ip)
 }

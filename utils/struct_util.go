@@ -38,8 +38,8 @@ type DsResponse struct {
 
 type ClientConfig struct {
 	//TODO-ming figure out what else the client needs
-	DSPublicKey rsa.PublicKey
-	MaxNumNodes uint16
-	DSIp        string
-	ServerIp    string
+	DSPublicKeyPath string
+	MaxNumNodes     uint16
+	DSIPPort        string
+	ServerIPPort    string
 }

@@ -23,6 +23,8 @@ func InitTorNode(dsIPPort string, listenIPPort string, fdListenIPPort string, ti
 	fmt.Println("==========================================================")
 	fmt.Printf("Initalizing Tor node with DS: %s, listening at: %s, fdlib listening at %s, timeout in milliseconds: %d\n", dsIPPort, listenIPPort, fdListenIPPort, timeoutMillis)
 
+	//vecLogger := govec.InitGoVector("tor_node_"+listenIPPort, "tor_node_"+listenIPPort, govec.GetDefaultConfig())
+
 	// Initialize variables
 	privateKey, pkerror := keyLibrary.GeneratePrivPubKey()
 	if pkerror != nil {

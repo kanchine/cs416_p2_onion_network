@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 
+	"../keyLibrary"
 	"../utils"
 	"./TorClient"
 )
@@ -15,10 +16,11 @@ func main() {
 	configPath := ""
 
 	if len(os.Args)-1 != 2 {
-		fmt.Println("please use: go run client.go client.json keyToFetch")
+		fmt.Println("please use: go run client.go client.json keyToFetchFromServer")
 	}
 
 	configPath = os.Args[1]
+	keyToFetch := os.Args[2]
 
 	rawConfig, fileerr := ioutil.ReadFile(configPath)
 	if fileerr != nil {
@@ -33,19 +35,34 @@ func main() {
 	}
 
 	//1. communicate to DS to get the list of tor nodes
-	tnMap := TorClient.ContactDsSerer(clientConfig.DSIp, clientConfig.MaxNumNodes, clientConfig.DSPublicKey)
+	publicKey, keyErr := keyLibrary.LoadPublicKey(clientConfig.DSPublicKeyPath)
+	if keyErr != nil {
+		panic(keyErr)
+	}
+	tnMap, dsErr := TorClient.ContactDsSerer(clientConfig.DSIPPort, clientConfig.MaxNumNodes, *publicKey)
+
+	if dsErr != nil {
+		fmt.Printf("Could not contact directory server for error: %s\n", dsErr)
+		os.Exit(1)
+	}
 
 	if uint16(len(tnMap)) < clientConfig.MaxNumNodes {
-		panic("DS did not send enough TN nodes")
+		fmt.Printf("Directory server didn't send enough tor nodes: needed %d, received: %d\n", clientConfig.MaxNumNodes, len(tnMap))
+		os.Exit(1)
 	}
 
 	nodeOrder := TorClient.DetermineTnOrder(tnMap)
-	nodeOrder = append(nodeOrder, clientConfig.DSIp)
+	nodeOrder = append(nodeOrder, clientConfig.DSIPPort)
 
 	//2. create and send onion
-	onionMessage, symmKeys := TorClient.CreateOnionMessage(nodeOrder, tnMap, os.Args[2])
+	fmt.Println("Fetching key: ", keyToFetch)
+	onionMessage, symmKeys := TorClient.CreateOnionMessage(nodeOrder, tnMap, keyToFetch)
 
-	res := TorClient.SendOnionMessage(nodeOrder[0], onionMessage, symmKeys)
+	res, sendErr := TorClient.SendOnionMessage(nodeOrder[0], onionMessage, symmKeys)
+	if sendErr != nil {
+		fmt.Printf("Could not send onion message for error: %s\n", sendErr)
+		os.Exit(1)
+	}
 
 	fmt.Println("we have received this value from the server: ", res)
 

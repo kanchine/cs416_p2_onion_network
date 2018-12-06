@@ -1,0 +1,7 @@
+{
+    "DSPublicKeyPath": "./dirserver/public.pem",
+	"MaxNumNodes": 5,
+	"DSIPPort": "127.0.0.1:8002",
+    "ServerIPPort": "127.0.0.1:8080"
+}
+  

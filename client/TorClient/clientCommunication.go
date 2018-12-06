@@ -1,7 +1,6 @@
 package TorClient
 
 import (
-	"bufio"
 	"crypto/rsa"
 	"fmt"
 	"net"
@@ -32,22 +31,20 @@ func SendOnionMessage(t1 string, onion []byte, symmKeys [][]byte) (string, error
 		return "", connErr
 	}
 
-	// TODO: use networking util tcp send
-	fmt.Fprint(conn, string(onion)+"\n")
+	utils.TCPWrite(conn, onion)
 
 	return readResponse(conn, symmKeys), nil
 }
 
-func readResponse(conn net.Conn, symmKeys [][]byte) string {
+func readResponse(conn *net.TCPConn, symmKeys [][]byte) string {
 
-	// TODO: use networking util tcp read
-	json, err := bufio.NewReader(conn).ReadString('\n')
+	bytesRead, err := utils.TCPRead(conn)
 
 	if err != nil {
 		panic("can not read response from connection")
 	}
 
-	return DecryptServerResponse([]byte(json), symmKeys)
+	return DecryptServerResponse(bytesRead, symmKeys)
 }
 
 func sendReqToDs(numNodes uint16, dsPublicKey rsa.PublicKey, conn net.Conn) []byte {
@@ -90,6 +87,7 @@ func readResFromDs(conn net.Conn, symmKey []byte) map[string]rsa.PublicKey {
 	return dsResponse.DnMap
 }
 
-func getTCPConnection(ip string) (net.Conn, error) {
-	return net.Dial("tcp", ip)
+func getTCPConnection(ip string) (*net.TCPConn, error) {
+	raddr, _ := net.ResolveTCPAddr("tcp", ip)
+	return net.DialTCP("tcp", nil, raddr)
 }

@@ -52,7 +52,7 @@ func main() {
 	}
 
 	nodeOrder := TorClient.DetermineTnOrder(tnMap)
-	nodeOrder = append(nodeOrder, clientConfig.DSIPPort)
+	nodeOrder = append(nodeOrder, clientConfig.ServerIPPort)
 
 	//2. create and send onion
 	fmt.Println("Fetching key: ", keyToFetch)

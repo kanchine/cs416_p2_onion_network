@@ -15,11 +15,12 @@ import (
 func main() {
 	configPath := ""
 
-	if len(os.Args)-1 != 1 {
-		fmt.Println("please use: go run client.go client.json")
+	if len(os.Args)-1 != 2 {
+		fmt.Println("please use: go run client.go client.json keyToFetchFromServer")
 	}
 
 	configPath = os.Args[1]
+	keyToFetch := os.Args[2]
 
 	rawConfig, fileerr := ioutil.ReadFile(configPath)
 	if fileerr != nil {
@@ -54,7 +55,8 @@ func main() {
 	nodeOrder = append(nodeOrder, clientConfig.ServerIPPort)
 
 	//2. create and send onion
-	onionMessage, symmKeys := TorClient.CreateOnionMessage(nodeOrder, tnMap, clientConfig.ServerPublicKeyPath)
+	fmt.Println("Fetching key: ", keyToFetch)
+	onionMessage, symmKeys := TorClient.CreateOnionMessage(nodeOrder, tnMap, keyToFetch)
 
 	res, sendErr := TorClient.SendOnionMessage(nodeOrder[0], onionMessage, symmKeys)
 	if sendErr != nil {

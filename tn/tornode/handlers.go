@@ -74,6 +74,7 @@ func forwardBackHelper(from *net.TCPConn, to *net.TCPConn, symmKey []byte, timeo
 	defer func() {
 		from.Close()
 		to.Close()
+		fmt.Printf("TorNode: connection to previous hop: %s, and next hop %s are closed\n", to.RemoteAddr(), from.RemoteAddr())
 	}()
 
 	derr := from.SetReadDeadline(time.Now().Add(time.Duration(timeoutMillis) * time.Millisecond))
@@ -85,7 +86,7 @@ func forwardBackHelper(from *net.TCPConn, to *net.TCPConn, symmKey []byte, timeo
 	payload, rerr := utils.TCPRead(from)
 
 	if dpassederr, ok := rerr.(net.Error); ok && dpassederr.Timeout() {
-		fmt.Printf("TorNode: WARNING waiting data from %s timeout. Tearing down forwarding from %s to %s\n", from.RemoteAddr(), from.RemoteAddr(), to.RemoteAddr())
+		fmt.Printf("TorNode: WARNING waiting data from %s timeout.\n", from.RemoteAddr())
 		return
 	}
 

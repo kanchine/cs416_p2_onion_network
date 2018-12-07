@@ -1,4 +1,5 @@
 {
+    "ID": "A",
     "DSPublicKeyPath": "./dirserver/public.pem",
     "ServerPublicKeyPath": "./server/DataServer/public.pem",
 	"MaxNumNodes": 2,

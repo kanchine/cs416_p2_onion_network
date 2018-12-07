@@ -4,10 +4,12 @@ import (
 	"crypto/rsa"
 	"net"
 
+	"github.com/DistributedClocks/GoVector/govec"
+
 	"../../utils"
 )
 
-func contactDS(dsIPPort string, TorIPPort string, fdlibIPPort string, pubKey *rsa.PublicKey) (bool, error) {
+func contactDS(dsIPPort string, TorIPPort string, fdlibIPPort string, pubKey *rsa.PublicKey, vecLogger *govec.GoLog) (bool, error) {
 	var laddr, raddr *net.TCPAddr
 	var addrErr error
 	laddr, addrErr = net.ResolveTCPAddr("tcp", ":"+getNewUnusedPort())
@@ -29,11 +31,11 @@ func contactDS(dsIPPort string, TorIPPort string, fdlibIPPort string, pubKey *rs
 	if merr != nil {
 		return false, merr
 	}
-	_, werr := utils.TCPWrite(conn, payload)
+	_, werr := utils.TCPWrite(conn, payload, vecLogger, "Contact DS to join network")
 	if werr != nil {
 		return false, werr
 	}
-	responsePayload, rerr := utils.TCPRead(conn)
+	responsePayload, rerr := utils.TCPRead(conn, vecLogger, "Confirmed by DS joined network successfully")
 	if rerr != nil {
 		return false, rerr
 	}

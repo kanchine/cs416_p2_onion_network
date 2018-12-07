@@ -17,3 +17,8 @@ Tor Network - Protect Your Identity!
 `go run tn/main.go [dsIPPort] [listenIPPort] [fdListenIPPort] [timeOutMillis]`
 
 (Default: dsIPPort=127.0.0.1:8001, listenIPPort=127.0.0.1:4001, fdListenIPPort=127.0.0.1:4002, timeOutMillis=1000)
+
+## How to generate ShiViz log file
+`go get -u github.com/DistributedClocks/GoVector`
+
+`$GOPATH/bin/GoVector --log_type shiviz --log_dir . --outfile tor-net-vec-log.log`

@@ -7,9 +7,10 @@ import (
 
 	"../../keyLibrary"
 	"../../utils"
+	"github.com/DistributedClocks/GoVector/govec"
 )
 
-func ContactDsSerer(DSIp string, numNodes uint16, dsPublicKey rsa.PublicKey) (map[string]rsa.PublicKey, error) {
+func ContactDsSerer(DSIp string, numNodes uint16, dsPublicKey rsa.PublicKey, vecLogger *govec.GoLog) (map[string]rsa.PublicKey, error) {
 
 	conn, connErr := getTCPConnection(DSIp)
 
@@ -17,13 +18,13 @@ func ContactDsSerer(DSIp string, numNodes uint16, dsPublicKey rsa.PublicKey) (ma
 		return nil, connErr
 	}
 
-	symmKey := sendReqToDs(numNodes, dsPublicKey, conn)
+	symmKey := sendReqToDs(numNodes, dsPublicKey, conn, vecLogger)
 
-	return readResFromDs(conn, symmKey), nil
+	return readResFromDs(conn, symmKey, vecLogger), nil
 
 }
 
-func SendOnionMessage(t1 string, onion []byte, symmKeys [][]byte) (string, error) {
+func SendOnionMessage(t1 string, onion []byte, symmKeys [][]byte, vecLogger *govec.GoLog) (string, error) {
 
 	conn, connErr := getTCPConnection(t1)
 
@@ -32,14 +33,14 @@ func SendOnionMessage(t1 string, onion []byte, symmKeys [][]byte) (string, error
 	}
 	fmt.Printf("Client: Sending %d bytes onion message\n", len(onion))
 
-	utils.TCPWrite(conn, onion)
+	utils.TCPWrite(conn, onion, vecLogger, "Sending onion message to tor network")
 
-	return readResponse(conn, symmKeys), nil
+	return readResponse(conn, symmKeys, vecLogger), nil
 }
 
-func readResponse(conn *net.TCPConn, symmKeys [][]byte) string {
+func readResponse(conn *net.TCPConn, symmKeys [][]byte, vecLogger *govec.GoLog) string {
 
-	bytesRead, err := utils.TCPRead(conn)
+	bytesRead, err := utils.TCPRead(conn, vecLogger, "Received response from tor network")
 
 	if err != nil {
 		panic("can not read response from connection")
@@ -48,7 +49,7 @@ func readResponse(conn *net.TCPConn, symmKeys [][]byte) string {
 	return DecryptServerResponse(bytesRead, symmKeys)
 }
 
-func sendReqToDs(numNodes uint16, dsPublicKey rsa.PublicKey, conn net.Conn) []byte {
+func sendReqToDs(numNodes uint16, dsPublicKey rsa.PublicKey, conn *net.TCPConn, vecLogger *govec.GoLog) []byte {
 	symmKey := keyLibrary.GenerateSymmKey()
 
 	request := utils.DsRequest{numNodes, symmKey}
@@ -59,20 +60,19 @@ func sendReqToDs(numNodes uint16, dsPublicKey rsa.PublicKey, conn net.Conn) []by
 	}
 
 	encryptedBytes, _ := keyLibrary.PubKeyEncrypt(&dsPublicKey, reqBytes)
-	conn.Write(encryptedBytes)
+	utils.TCPWrite(conn, encryptedBytes, vecLogger, "Contact dir_server for tor nodes")
 
 	return symmKey
 }
 
-func readResFromDs(conn net.Conn, symmKey []byte) map[string]rsa.PublicKey {
-	// TODO: Not sure if it's safe to hardcode the buf size here
-	buf := make([]byte, 8192)
-	n, err := conn.Read(buf)
+func readResFromDs(conn *net.TCPConn, symmKey []byte, vecLogger *govec.GoLog) map[string]rsa.PublicKey {
+	buf, err := utils.TCPRead(conn, vecLogger, "Received tor nodes from dir_server")
+
 	if err != nil {
-		panic("can not read response from connection")
+		panic("can not read response from DS connection")
 	}
 
-	decryptedBytes, err := keyLibrary.SymmKeyDecryptBase64(buf[:n], symmKey)
+	decryptedBytes, err := keyLibrary.SymmKeyDecryptBase64(buf, symmKey)
 	if err != nil {
 		fmt.Println(err)
 		panic("can not decrypt response from DS")

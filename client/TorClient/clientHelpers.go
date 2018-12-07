@@ -4,7 +4,6 @@ import (
 	"crypto/rsa"
 	"math/rand"
 	"time"
-
 	"../../keyLibrary"
 	"../../utils"
 )
@@ -19,6 +18,7 @@ func CreateOnionMessage(nodeOrder []string, tnMap map[string]rsa.PublicKey, reqK
 	var symKeys [][]byte
 
 	ServerSymKey := keyLibrary.GenerateSymmKey()
+
 	request, _ := utils.Marshall(utils.Request{Key: reqKey, SymmKey: ServerSymKey})
 
 	symKeys = append(symKeys, ServerSymKey)
@@ -31,6 +31,7 @@ func CreateOnionMessage(nodeOrder []string, tnMap map[string]rsa.PublicKey, reqK
 		var outerOnionMessage utils.Onion
 
 		symmKey := keyLibrary.GenerateSymmKey()
+
 		outerOnionMessage.SymmKey = symmKey
 		symKeys = append([][]byte{symmKey}, symKeys...)
 
@@ -66,10 +67,6 @@ func CreateOnionMessage(nodeOrder []string, tnMap map[string]rsa.PublicKey, reqK
 		}
 	}
 
-	//marshalledOnion, _ := utils.Marshall(onionMessage)
-	//encryptedOnion := EncryptPayload(marshalledOnion, tnMap[nodeOrder[0]])
-	//finalOnion, _ := utils.Marshall(encryptedOnion)
-
 	return onionMessage, symKeys
 
 }
@@ -99,15 +96,16 @@ func DecryptServerResponse(onionBytes []byte, symmKeys [][]byte) string {
 
 	currBytes := onionBytes
 
-	for _, key := range symmKeys {
-		decryptedOnionBytes, err := keyLibrary.SymmKeyDecrypt(onionBytes, key)
+	for i := 0; i < len(symmKeys) - 1; i ++ {
+
+		decryptedOnionBytes, err := keyLibrary.SymmKeyDecrypt(currBytes, symmKeys[i])
 
 		if err != nil {
 			panic("can not decrypt onion using symmKey")
 		}
 
 		var unmarshalledOnion utils.Onion
-		err = utils.UnMarshall(decryptedOnionBytes, unmarshalledOnion)
+		err = utils.UnMarshall(decryptedOnionBytes, &unmarshalledOnion)
 
 		if err != nil {
 			panic("can not unmarshal onion")
@@ -116,10 +114,15 @@ func DecryptServerResponse(onionBytes []byte, symmKeys [][]byte) string {
 		currBytes = unmarshalledOnion.Payload
 	}
 
-	var resObj utils.Response
-	utils.UnMarshall(currBytes, resObj)
+	decryptedResponse, err  := keyLibrary.SymmKeyDecrypt(currBytes, symmKeys[len(symmKeys) - 1])
+	if err != nil {
+		panic("cant decrypt server response")
+	}
 
-	return string(resObj.Value)
+	var resObj utils.Response
+	utils.UnMarshall(decryptedResponse, &resObj)
+
+	return resObj.Value
 }
 
 func DetermineTnOrder(tnMap map[string]rsa.PublicKey) []string {

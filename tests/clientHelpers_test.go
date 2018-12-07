@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"../TorClient"
+	"../client/TorClient"
 	"../keyLibrary"
 	"../utils"
 	"crypto/rsa"

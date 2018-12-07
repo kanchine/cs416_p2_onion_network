@@ -35,11 +35,11 @@ func main() {
 	}
 
 	//1. communicate to DS to get the list of tor nodes
-	publicKey, keyErr := keyLibrary.LoadPublicKey(clientConfig.DSPublicKeyPath)
+	DSPublicKey, keyErr := keyLibrary.LoadPublicKey(clientConfig.DSPublicKeyPath)
 	if keyErr != nil {
 		panic(keyErr)
 	}
-	tnMap, dsErr := TorClient.ContactDsSerer(clientConfig.DSIPPort, clientConfig.MaxNumNodes, *publicKey)
+	tnMap, dsErr := TorClient.ContactDsSerer(clientConfig.DSIPPort, clientConfig.MaxNumNodes, *DSPublicKey)
 
 	if dsErr != nil {
 		fmt.Printf("Could not contact directory server for error: %s\n", dsErr)
@@ -55,6 +55,13 @@ func main() {
 	nodeOrder = append(nodeOrder, clientConfig.ServerIPPort)
 
 	//2. create and send onion
+	serverPublicKey, err := keyLibrary.LoadPublicKey(clientConfig.ServerPublicKeyPath)
+	if err != nil {
+		panic(err)
+	}
+
+	tnMap[clientConfig.ServerIPPort] = *serverPublicKey
+	
 	fmt.Println("Fetching key: ", keyToFetch)
 	onionMessage, symmKeys := TorClient.CreateOnionMessage(nodeOrder, tnMap, keyToFetch)
 

@@ -34,7 +34,7 @@ func main() {
 		log.Printf("client.go: Invalid json file: %s\n", jsonErr)
 		os.Exit(1)
 	}
-	vecLogger := govec.InitGoVector("Client_"+clientConfig.ID, "Client_"+clientConfig.ID, govec.GetDefaultConfig())
+	vecLogger := govec.InitGoVector("Client-"+clientConfig.ID, "Client-"+clientConfig.ID, govec.GetDefaultConfig())
 
 	//1. communicate to DS to get the list of tor nodes
 	DSPublicKey, keyErr := keyLibrary.LoadPublicKey(clientConfig.DSPublicKeyPath)

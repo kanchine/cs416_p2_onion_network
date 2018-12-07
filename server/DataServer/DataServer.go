@@ -59,7 +59,7 @@ func Initialize(configFile string, privateKeyFile string) (*Server, error) {
 
 	privateKey, err := keyLibrary.LoadPrivateKey(privateKeyFile)
 
-	vecLogger := govec.InitGoVector("data_server", "data_server", govec.GetDefaultConfig())
+	vecLogger := govec.InitGoVector("data-server", "data-server", govec.GetDefaultConfig())
 
 	return &Server{privateKey, config.IncomingTcpAddr, config.DataBase, &sync.Mutex{}, vecLogger}, err
 }

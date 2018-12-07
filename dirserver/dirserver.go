@@ -70,7 +70,7 @@ func StartDS(Ip, PortForTN, PortForTC string) {
 }
 
 func NewDirServer(Ip, PortForTN, PortForTC string) *DirServer {
-	vecLogger := govec.InitGoVector("dir_server", "dir_server", govec.GetDefaultConfig())
+	vecLogger := govec.InitGoVector("dir-server", "dir-server", govec.GetDefaultConfig())
 
 	ds := new(DirServer)
 	ds.LoadPrivateKey()

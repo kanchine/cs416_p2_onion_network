@@ -16,3 +16,8 @@
 .idea
 
 *.log
+
+Client-*-Log.txt
+data-server-Log.txt
+dir-server-Log.txt
+tor-node-*.*.*.*:*-Log.txt

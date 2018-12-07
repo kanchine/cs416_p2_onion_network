@@ -10,6 +10,7 @@ import (
 	"../keyLibrary"
 	"../utils"
 	"./TorClient"
+	"github.com/DistributedClocks/GoVector/govec"
 )
 
 func main() {
@@ -33,13 +34,14 @@ func main() {
 		log.Printf("client.go: Invalid json file: %s\n", jsonErr)
 		os.Exit(1)
 	}
+	vecLogger := govec.InitGoVector("Client_"+clientConfig.ID, "Client_"+clientConfig.ID, govec.GetDefaultConfig())
 
 	//1. communicate to DS to get the list of tor nodes
 	DSPublicKey, keyErr := keyLibrary.LoadPublicKey(clientConfig.DSPublicKeyPath)
 	if keyErr != nil {
 		panic(keyErr)
 	}
-	tnMap, dsErr := TorClient.ContactDsSerer(clientConfig.DSIPPort, clientConfig.MaxNumNodes, *DSPublicKey)
+	tnMap, dsErr := TorClient.ContactDsSerer(clientConfig.DSIPPort, clientConfig.MaxNumNodes, *DSPublicKey, vecLogger)
 
 	if dsErr != nil {
 		fmt.Printf("Could not contact directory server for error: %s\n", dsErr)
@@ -61,11 +63,11 @@ func main() {
 	}
 
 	tnMap[clientConfig.ServerIPPort] = *serverPublicKey
-	
+
 	fmt.Println("Fetching key: ", keyToFetch)
 	onionMessage, symmKeys := TorClient.CreateOnionMessage(nodeOrder, tnMap, keyToFetch)
 
-	res, sendErr := TorClient.SendOnionMessage(nodeOrder[0], onionMessage, symmKeys)
+	res, sendErr := TorClient.SendOnionMessage(nodeOrder[0], onionMessage, symmKeys, vecLogger)
 	if sendErr != nil {
 		fmt.Printf("Could not send onion message for error: %s\n", sendErr)
 		os.Exit(1)

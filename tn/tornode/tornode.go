@@ -10,6 +10,7 @@ import (
 
 	"../../keyLibrary"
 	"../../utils"
+	"github.com/DistributedClocks/GoVector/govec"
 )
 
 type TorNode struct {
@@ -23,7 +24,7 @@ func InitTorNode(dsIPPort string, listenIPPort string, fdListenIPPort string, ti
 	fmt.Println("==========================================================")
 	fmt.Printf("Initalizing Tor node with DS: %s, listening at: %s, fdlib listening at %s, timeout in milliseconds: %d\n", dsIPPort, listenIPPort, fdListenIPPort, timeoutMillis)
 
-	//vecLogger := govec.InitGoVector("tor_node_"+listenIPPort, "tor_node_"+listenIPPort, govec.GetDefaultConfig())
+	vecLogger := govec.InitGoVector("tor_node_"+listenIPPort, "tor_node_"+listenIPPort, govec.GetDefaultConfig())
 
 	// Initialize variables
 	privateKey, pkerror := keyLibrary.GeneratePrivPubKey()
@@ -51,7 +52,7 @@ func InitTorNode(dsIPPort string, listenIPPort string, fdListenIPPort string, ti
 	}
 
 	// join network
-	dsstatus, dserror := contactDS(dsIPPort, listenIPPort, fdListenIPPort, publicKey)
+	dsstatus, dserror := contactDS(dsIPPort, listenIPPort, fdListenIPPort, publicKey, vecLogger)
 	if dserror != nil {
 		fmt.Printf("TorNode: Could not contact DS to join tor network for error: %s\n", dserror)
 		return dserror
@@ -72,7 +73,7 @@ func InitTorNode(dsIPPort string, listenIPPort string, fdListenIPPort string, ti
 	}
 
 	fmt.Printf("Tor Node successfully initialized! Kicking off onion handler daemon...\n\n\n")
-	go onionHandler(listener, privateKey, timeoutMillis)
+	go onionHandler(listener, privateKey, timeoutMillis, vecLogger)
 
 	return nil
 }

@@ -9,6 +9,8 @@ import (
 	"os"
 	"sync"
 
+	"github.com/DistributedClocks/GoVector/govec"
+
 	"../../keyLibrary"
 	"../../utils"
 )
@@ -20,6 +22,7 @@ type Server struct {
 	IpPort       string            // The ip port the server will be listening for connection on.
 	DataBase     map[string]string // The key value pair this database stores.
 	LockDataBase *sync.Mutex       // Lock to ensure synchronized database access.
+	VecLogger    *govec.GoLog
 }
 
 type Config struct {
@@ -56,7 +59,9 @@ func Initialize(configFile string, privateKeyFile string) (*Server, error) {
 
 	privateKey, err := keyLibrary.LoadPrivateKey(privateKeyFile)
 
-	return &Server{privateKey, config.IncomingTcpAddr, config.DataBase, &sync.Mutex{}}, err
+	vecLogger := govec.InitGoVector("data_server", "data_server", govec.GetDefaultConfig())
+
+	return &Server{privateKey, config.IncomingTcpAddr, config.DataBase, &sync.Mutex{}, vecLogger}, err
 }
 
 func (s *Server) StartService() {
@@ -86,7 +91,7 @@ func (s *Server) StartService() {
 func (s *Server) connectionHandler(conn *net.TCPConn) {
 	// Note connection will be closed by the TN.
 
-	reqEncrypt, err := utils.TCPRead(conn)
+	reqEncrypt, err := utils.TCPRead(conn, s.VecLogger, "Received client request")
 
 	if err != nil {
 		fmt.Println("Server handler: reading data from connection failed")
@@ -110,7 +115,7 @@ func (s *Server) connectionHandler(conn *net.TCPConn) {
 
 	encryptedData, err := keyLibrary.SymmKeyEncrypt(respData, req.SymmKey)
 
-	n, err := utils.TCPWrite(conn, encryptedData)
+	n, err := utils.TCPWrite(conn, encryptedData, s.VecLogger, "Responded to client request")
 
 	fmt.Println("Server response sent to:", conn.RemoteAddr())
 

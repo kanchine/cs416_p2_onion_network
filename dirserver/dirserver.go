@@ -13,6 +13,7 @@ import (
 
 	"../keyLibrary"
 	"../utils"
+	"github.com/DistributedClocks/GoVector/govec"
 )
 
 var (
@@ -35,6 +36,7 @@ type DirServer struct {
 	Fd        utils.FD
 	NotifyCh  <-chan utils.FailureDetected
 	Mu        *sync.RWMutex
+	VecLogger *govec.GoLog
 }
 
 func main() {
@@ -68,6 +70,7 @@ func StartDS(Ip, PortForTN, PortForTC string) {
 }
 
 func NewDirServer(Ip, PortForTN, PortForTC string) *DirServer {
+	vecLogger := govec.InitGoVector("dir_server", "dir_server", govec.GetDefaultConfig())
 
 	ds := new(DirServer)
 	ds.LoadPrivateKey()
@@ -76,6 +79,7 @@ func NewDirServer(Ip, PortForTN, PortForTC string) *DirServer {
 	ds.Ip = Ip
 	ds.PortForTN = PortForTN
 	ds.PortForTC = PortForTC
+	ds.VecLogger = vecLogger
 
 	return ds
 }
@@ -158,7 +162,7 @@ func (ds *DirServer) HandleTN(conn *net.TCPConn) {
 		}
 	}()
 
-	reqBytes, err := utils.TCPRead(conn)
+	reqBytes, err := utils.TCPRead(conn, ds.VecLogger, "Received new Tor Node join")
 	if err != nil {
 		printError("HandleTN: reading request from connection failed", err)
 		return
@@ -190,7 +194,7 @@ func (ds *DirServer) HandleTN(conn *net.TCPConn) {
 		return
 	}
 
-	_, err = utils.TCPWrite(conn, respBytes)
+	_, err = utils.TCPWrite(conn, respBytes, ds.VecLogger, "Confirm new Tor node "+req.TorIpPort+" join")
 	if err != nil {
 		printError("HandleTN: response write failed", err)
 		return
@@ -211,7 +215,7 @@ func (ds *DirServer) HandleTC(conn *net.TCPConn) {
 		}
 	}()
 
-	reqBytes, err := utils.TCPRead(conn)
+	reqBytes, err := utils.TCPRead(conn, ds.VecLogger, "Received tor client new circuit requst")
 	if err != nil {
 		printError("HandleTC: reading request from connection failed", err)
 		return
@@ -243,7 +247,7 @@ func (ds *DirServer) HandleTC(conn *net.TCPConn) {
 	}
 
 	encryptedResp, err := keyLibrary.SymmKeyEncryptBase64(respBytes, req.SymmKey)
-	_, err = utils.TCPWrite(conn, encryptedResp)
+	_, err = utils.TCPWrite(conn, encryptedResp, ds.VecLogger, "Respond to tor client new circuit requst")
 	if err != nil {
 		printError("HandleTC: response write failed", err)
 		return

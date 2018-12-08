@@ -124,10 +124,10 @@ func (s *Server) connectionHandler(conn *net.TCPConn) {
 		return
 	}
 
-	if n != len(encryptedData) {
-		fmt.Println("Server handler: incorrect number of bytes written to the connection")
-		return
-	}
+	//if n != len(encryptedData) {
+	//	fmt.Println("Server handler: incorrect number of bytes written to the connection")
+	//	return
+	//}
 }
 
 func unmarshalServerRequest(data []byte, serverKey *rsa.PrivateKey) utils.Request {

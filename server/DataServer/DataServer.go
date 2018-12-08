@@ -115,7 +115,7 @@ func (s *Server) connectionHandler(conn *net.TCPConn) {
 
 	encryptedData, err := keyLibrary.SymmKeyEncrypt(respData, req.SymmKey)
 
-	n, err := utils.TCPWrite(conn, encryptedData, s.VecLogger, "Responded to client request")
+	_, err := utils.TCPWrite(conn, encryptedData, s.VecLogger, "Responded to client request")
 
 	fmt.Println("Server response sent to:", conn.RemoteAddr())
 

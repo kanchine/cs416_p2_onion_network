@@ -5,5 +5,5 @@ clear
 echo "Clearing outdated logs..."
 rm *.log
 rm *.txt
-echo "Running Tor node 1..."
-go run tn/main.go 10.0.0.12:8001 10.0.0.13:4001 10.0.0.13:4002 100000
+echo "Running Tor node 3..."
+go run tn/main.go 10.0.0.12:8001 10.0.0.16:4001 10.0.0.16:4002 100000

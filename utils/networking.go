@@ -42,10 +42,11 @@ func TCPRead(from *net.TCPConn, vecLogger *govec.GoLog, vecMsg string) ([]byte, 
 		}
 		bytes = append(bytes, chunk[:size]...)
 		sizeMsg += size
+		fmt.Printf("====Read chunk: %d\n", size)
+
 		if sizeMsg == actlen {
 			break
 		}
-		fmt.Printf("====Read chunk: %d\n", size)
 	}
 
 	if sizeMsg != actlen {

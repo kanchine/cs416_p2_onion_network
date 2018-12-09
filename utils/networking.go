@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 
 	"github.com/DistributedClocks/GoVector/govec"
@@ -38,7 +39,11 @@ func TCPRead(from *net.TCPConn, vecLogger *govec.GoLog, vecMsg string) ([]byte, 
 	for {
 		size, rerr := from.Read(chunk)
 		if rerr != nil {
-			return nil, rerr
+			if rerr != io.EOF {
+				return nil, rerr
+			}
+
+			break
 		}
 		bytes = append(bytes, chunk[:size]...)
 		sizeMsg += size

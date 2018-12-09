@@ -162,7 +162,7 @@ func (ds *DirServer) HandleTN(conn *net.TCPConn) {
 		}
 	}()
 
-	reqBytes, err := utils.TCPRead(conn, ds.VecLogger, "Received new Tor Node join")
+	reqBytes, err := utils.TCPRead(conn, ds.VecLogger, "Received new Tor node join")
 	if err != nil {
 		printError("HandleTN: reading request from connection failed", err)
 		return
@@ -194,7 +194,7 @@ func (ds *DirServer) HandleTN(conn *net.TCPConn) {
 		return
 	}
 
-	_, err = utils.TCPWrite(conn, respBytes, ds.VecLogger, "Confirm new Tor node "+req.TorIpPort+" join")
+	_, err = utils.TCPWrite(conn, respBytes, ds.VecLogger, "Confirm new Tor node from "+req.TorIpPort+" to join")
 	if err != nil {
 		printError("HandleTN: response write failed", err)
 		return

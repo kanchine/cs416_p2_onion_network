@@ -27,7 +27,7 @@ func onionHandler(listener *net.TCPListener, privateKey *rsa.PrivateKey, timeout
 }
 
 func handleNewCircuitConn(newCircuitConn *net.TCPConn, privateKey *rsa.PrivateKey, timeoutMillis int, vecLogger *govec.GoLog) {
-	rawBytes, rerr := utils.TCPRead(newCircuitConn, vecLogger, "New onion recieved")
+	rawBytes, rerr := utils.TCPRead(newCircuitConn, vecLogger, "Received new onion")
 
 	if rerr != nil {
 		fmt.Printf("TorNode: WARNING read from connection error: %s\n", rerr)
@@ -85,7 +85,7 @@ func forwardBackHelper(from *net.TCPConn, to *net.TCPConn, symmKey []byte, timeo
 		return
 	}
 	fmt.Printf("TorNode: Wating response from nextHop: %s\n", from.RemoteAddr())
-	payload, rerr := utils.TCPRead(from, vecLogger, "Responsed onion received")
+	payload, rerr := utils.TCPRead(from, vecLogger, "Response onion received")
 
 	if dpassederr, ok := rerr.(net.Error); ok && dpassederr.Timeout() {
 		fmt.Printf("TorNode: WARNING waiting data from %s timeout.\n", from.RemoteAddr())
@@ -109,7 +109,7 @@ func forwardBackHelper(from *net.TCPConn, to *net.TCPConn, symmKey []byte, timeo
 		return
 	}
 
-	_, werr := utils.TCPWrite(to, forwardPayload, vecLogger, "Response onion sent to previous hop")
+	_, werr := utils.TCPWrite(to, forwardPayload, vecLogger, "Response onion forwarded to previous hop")
 	if werr != nil {
 		fmt.Printf("TorNode: WARNING failed to forward previous hop: %s\n", werr)
 		return

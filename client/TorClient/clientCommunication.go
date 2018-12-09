@@ -33,14 +33,14 @@ func SendOnionMessage(t1 string, onion []byte, symmKeys [][]byte, vecLogger *gov
 	}
 	fmt.Printf("Client: Sending %d bytes onion message\n", len(onion))
 
-	utils.TCPWrite(conn, onion, vecLogger, "Sending onion message to tor network")
+	utils.TCPWrite(conn, onion, vecLogger, "Sending onion request to Tor network")
 
 	return readResponse(conn, symmKeys, vecLogger), nil
 }
 
 func readResponse(conn *net.TCPConn, symmKeys [][]byte, vecLogger *govec.GoLog) string {
 
-	bytesRead, err := utils.TCPRead(conn, vecLogger, "Received response from tor network")
+	bytesRead, err := utils.TCPRead(conn, vecLogger, "Received onion response from Tor network")
 
 	if err != nil {
 		panic("can not read response from connection")

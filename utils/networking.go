@@ -10,26 +10,31 @@ import (
 	"github.com/DistributedClocks/GoVector/govec"
 )
 
-const MSG_SIZE = 4                             // 4 bytes in size
+const MSG_SIZE = 4 // 4 bytes in size
 
 func TCPRead(from *net.TCPConn, vecLogger *govec.GoLog, vecMsg string) ([]byte, error) {
-	sizeBuf := make([]byte, MSG_SIZE)
-	_, err := from.Read(sizeBuf)
-
-	if err != nil {
-		return nil, err
+	// Reading message size
+	sizeBuf := make([]byte, 0)
+	sReadCount := MSG_SIZE
+	sReadBuf := make([]byte, 1) // read one byte at a time
+	for {
+		s, err := from.Read(sReadBuf)
+		if err != nil {
+			return nil, err
+		}
+		sReadCount--
+		sizeBuf = append(sizeBuf, sReadBuf[0:s]...)
+		if sReadCount == 0 {
+			break
+		}
 	}
 
 	mlen := binary.LittleEndian.Uint32(sizeBuf)
 
-	if err != nil {
-		return nil, err
-	}
-
 	actlen := int(mlen)
-	fmt.Println("Message size:", actlen)
+	fmt.Println("**Networking**: Expected message size:", actlen)
 
-	//sizeMsg, err := conn.Read(msgBuff)
+	// Reading acutal message
 	bytes := make([]byte, 0)
 	chunkCap := 1024
 	chunk := make([]byte, chunkCap)
@@ -47,9 +52,8 @@ func TCPRead(from *net.TCPConn, vecLogger *govec.GoLog, vecMsg string) ([]byte, 
 		}
 		bytes = append(bytes, chunk[:size]...)
 		sizeMsg += size
-		fmt.Printf("====Read chunk: %d\n", size)
 
-		if sizeMsg == actlen {
+		if sizeMsg >= actlen {
 			break
 		}
 	}
@@ -57,6 +61,7 @@ func TCPRead(from *net.TCPConn, vecLogger *govec.GoLog, vecMsg string) ([]byte, 
 	if sizeMsg != actlen {
 		return nil, errors.New("msg size wrong")
 	}
+	fmt.Printf("**Networking**: Read total: %d bytes\n", sizeMsg)
 
 	var results []byte
 	vecLogger.UnpackReceive(vecMsg, bytes, &results, govec.GetDefaultLogOptions())
@@ -69,7 +74,7 @@ func TCPWrite(to *net.TCPConn, payload []byte, vecLogger *govec.GoLog, vecMsg st
 	b := make([]byte, MSG_SIZE)
 	binary.LittleEndian.PutUint32(b, uint32(len(loggedPayload)))
 
-	_, _  = to.Write(b)
-
+	_, _ = to.Write(b)
+	fmt.Printf("**Networking**: write total: %d bytes\n", uint32(len(loggedPayload)))
 	return to.Write(loggedPayload)
 }

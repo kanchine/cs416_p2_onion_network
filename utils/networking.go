@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -11,22 +11,31 @@ import (
 )
 
 const MSG_SIZE = 4                             // 4 bytes in size
+const BufSize = 1024
+
+type Size struct {
+	Size int
+}
 
 func TCPRead(from *net.TCPConn, vecLogger *govec.GoLog, vecMsg string) ([]byte, error) {
-	sizeBuf := make([]byte, MSG_SIZE)
-	_, err := from.Read(sizeBuf)
+	sizeBuf := make([]byte, BufSize)
+	n, err := from.Read(sizeBuf)
 
 	if err != nil {
 		return nil, err
 	}
 
-	mlen := binary.LittleEndian.Uint32(sizeBuf)
+	var s Size
+
+	err = json.Unmarshal(sizeBuf[:n], &s)
 
 	if err != nil {
 		return nil, err
 	}
+	//mlen := binary.LittleEndian.Uint32(sizeBuf)
 
-	actlen := int(mlen)
+	//actlen := int(mlen)
+	actlen := s.Size
 	fmt.Println("Message size:", actlen)
 
 	//sizeMsg, err := conn.Read(msgBuff)
@@ -66,8 +75,16 @@ func TCPRead(from *net.TCPConn, vecLogger *govec.GoLog, vecMsg string) ([]byte, 
 func TCPWrite(to *net.TCPConn, payload []byte, vecLogger *govec.GoLog, vecMsg string) (int, error) {
 	loggedPayload := vecLogger.PrepareSend(vecMsg, payload, govec.GetDefaultLogOptions())
 
-	b := make([]byte, MSG_SIZE)
-	binary.LittleEndian.PutUint32(b, uint32(len(loggedPayload)))
+	//b := make([]byte, MSG_SIZE)
+	//binary.LittleEndian.PutUint32(b, uint32(len(loggedPayload)))
+
+	size := Size{Size: len(loggedPayload)}
+
+	b, err := json.Marshal(size)
+
+	if err != nil {
+		return 0, err
+	}
 
 	_, _  = to.Write(b)
 

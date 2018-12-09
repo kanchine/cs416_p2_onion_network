@@ -26,6 +26,7 @@ func TCPRead(from *net.TCPConn, vecLogger *govec.GoLog, vecMsg string) ([]byte, 
 	}
 
 	actlen := int(mlen)
+	fmt.Println("Message size:", actlen)
 
 	//sizeMsg, err := conn.Read(msgBuff)
 	bytes := make([]byte, 0)

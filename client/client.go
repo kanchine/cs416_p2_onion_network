@@ -54,6 +54,7 @@ func main() {
 	}
 
 	nodeOrder := TorClient.DetermineTnOrder(tnMap)
+	fmt.Println("Client: using Tor circuit: ", nodeOrder)
 	nodeOrder = append(nodeOrder, clientConfig.ServerIPPort)
 
 	//2. create and send onion
@@ -64,7 +65,7 @@ func main() {
 
 	tnMap[clientConfig.ServerIPPort] = *serverPublicKey
 
-	fmt.Println("Fetching key: ", keyToFetch)
+	fmt.Println("Client: Fetching key: ", keyToFetch)
 	onionMessage, symmKeys := TorClient.CreateOnionMessage(nodeOrder, tnMap, keyToFetch)
 
 	res, sendErr := TorClient.SendOnionMessage(nodeOrder[0], onionMessage, symmKeys, vecLogger)
@@ -73,6 +74,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println("we have received this value from the server: ", res)
+	fmt.Println("Client: We have received this value from the server: ", res)
 
 }

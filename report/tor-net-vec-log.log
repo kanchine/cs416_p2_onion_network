@@ -1,0 +1,78 @@
+(?<host>\S*) (?<clock>{.*})\n(?<event>.*)
+
+Client-A {"Client-A":1}
+Initialization Complete
+Client-A {"Client-A":2}
+Contact dir_server for tor nodes
+Client-A {"tor-node-10.0.0.16:4001":2, "Client-A":3, "dir-server":9, "tor-node-10.0.0.13:4001":2, "tor-node-10.0.0.15:4001":2}
+Received tor nodes from dir_server
+Client-A {"Client-A":4, "dir-server":9, "tor-node-10.0.0.13:4001":2, "tor-node-10.0.0.15:4001":2, "tor-node-10.0.0.16:4001":2}
+Sending onion request to Tor network
+Client-A {"Client-A":5, "dir-server":9, "tor-node-10.0.0.13:4001":7, "tor-node-10.0.0.15:4001":7, "tor-node-10.0.0.16:4001":7, "data-server":3}
+Received onion response from Tor network
+data-server {"data-server":1}
+Initialization Complete
+data-server {"data-server":2, "tor-node-10.0.0.15:4001":5, "tor-node-10.0.0.13:4001":5, "dir-server":9, "Client-A":4, "tor-node-10.0.0.16:4001":5}
+Received client request
+data-server {"data-server":3, "tor-node-10.0.0.15:4001":5, "tor-node-10.0.0.13:4001":5, "dir-server":9, "Client-A":4, "tor-node-10.0.0.16:4001":5}
+Responded to client request
+dir-server {"dir-server":1}
+Initialization Complete
+dir-server {"dir-server":2, "tor-node-10.0.0.13:4001":2}
+Received new Tor node join
+dir-server {"tor-node-10.0.0.13:4001":2, "dir-server":3}
+Confirm new Tor node from 10.0.0.13:4001 to join
+dir-server {"tor-node-10.0.0.15:4001":2, "dir-server":4, "tor-node-10.0.0.13:4001":2}
+Received new Tor node join
+dir-server {"dir-server":5, "tor-node-10.0.0.13:4001":2, "tor-node-10.0.0.15:4001":2}
+Confirm new Tor node from 10.0.0.15:4001 to join
+dir-server {"tor-node-10.0.0.13:4001":2, "tor-node-10.0.0.15:4001":2, "tor-node-10.0.0.16:4001":2, "dir-server":6}
+Received new Tor node join
+dir-server {"dir-server":7, "tor-node-10.0.0.13:4001":2, "tor-node-10.0.0.15:4001":2, "tor-node-10.0.0.16:4001":2}
+Confirm new Tor node from 10.0.0.16:4001 to join
+dir-server {"tor-node-10.0.0.13:4001":2, "tor-node-10.0.0.15:4001":2, "tor-node-10.0.0.16:4001":2, "Client-A":2, "dir-server":8}
+Received tor client new circuit requst
+dir-server {"tor-node-10.0.0.13:4001":2, "tor-node-10.0.0.15:4001":2, "tor-node-10.0.0.16:4001":2, "Client-A":2, "dir-server":9}
+Respond to tor client new circuit requst
+tor-node-10.0.0.13:4001 {"tor-node-10.0.0.13:4001":1}
+Initialization Complete
+tor-node-10.0.0.13:4001 {"tor-node-10.0.0.13:4001":2}
+Contact DS to join network
+tor-node-10.0.0.13:4001 {"tor-node-10.0.0.13:4001":3, "dir-server":3}
+Confirmed joined network successfully
+tor-node-10.0.0.13:4001 {"tor-node-10.0.0.13:4001":4, "dir-server":9, "Client-A":4, "tor-node-10.0.0.15:4001":2, "tor-node-10.0.0.16:4001":2}
+Received new onion
+tor-node-10.0.0.13:4001 {"tor-node-10.0.0.13:4001":5, "dir-server":9, "Client-A":4, "tor-node-10.0.0.15:4001":2, "tor-node-10.0.0.16:4001":2}
+New onion forwarded to next hop
+tor-node-10.0.0.13:4001 {"tor-node-10.0.0.13:4001":6, "dir-server":9, "Client-A":4, "tor-node-10.0.0.15:4001":7, "tor-node-10.0.0.16:4001":7, "data-server":3}
+Response onion received
+tor-node-10.0.0.13:4001 {"dir-server":9, "Client-A":4, "tor-node-10.0.0.15:4001":7, "tor-node-10.0.0.16:4001":7, "data-server":3, "tor-node-10.0.0.13:4001":7}
+Response onion forwarded to previous hop
+tor-node-10.0.0.15:4001 {"tor-node-10.0.0.15:4001":1}
+Initialization Complete
+tor-node-10.0.0.15:4001 {"tor-node-10.0.0.15:4001":2}
+Contact DS to join network
+tor-node-10.0.0.15:4001 {"tor-node-10.0.0.15:4001":3, "tor-node-10.0.0.13:4001":2, "dir-server":5}
+Confirmed joined network successfully
+tor-node-10.0.0.15:4001 {"tor-node-10.0.0.15:4001":4, "tor-node-10.0.0.13:4001":5, "dir-server":9, "Client-A":4, "tor-node-10.0.0.16:4001":5}
+Received new onion
+tor-node-10.0.0.15:4001 {"tor-node-10.0.0.15:4001":5, "tor-node-10.0.0.13:4001":5, "dir-server":9, "Client-A":4, "tor-node-10.0.0.16:4001":5}
+New onion forwarded to next hop
+tor-node-10.0.0.15:4001 {"tor-node-10.0.0.15:4001":6, "tor-node-10.0.0.13:4001":5, "dir-server":9, "Client-A":4, "tor-node-10.0.0.16:4001":5, "data-server":3}
+Response onion received
+tor-node-10.0.0.15:4001 {"tor-node-10.0.0.16:4001":5, "data-server":3, "tor-node-10.0.0.15:4001":7, "tor-node-10.0.0.13:4001":5, "dir-server":9, "Client-A":4}
+Response onion forwarded to previous hop
+tor-node-10.0.0.16:4001 {"tor-node-10.0.0.16:4001":1}
+Initialization Complete
+tor-node-10.0.0.16:4001 {"tor-node-10.0.0.16:4001":2}
+Contact DS to join network
+tor-node-10.0.0.16:4001 {"tor-node-10.0.0.16:4001":3, "tor-node-10.0.0.13:4001":2, "tor-node-10.0.0.15:4001":2, "dir-server":7}
+Confirmed joined network successfully
+tor-node-10.0.0.16:4001 {"Client-A":4, "tor-node-10.0.0.16:4001":4, "tor-node-10.0.0.13:4001":5, "tor-node-10.0.0.15:4001":2, "dir-server":9}
+Received new onion
+tor-node-10.0.0.16:4001 {"tor-node-10.0.0.16:4001":5, "tor-node-10.0.0.13:4001":5, "tor-node-10.0.0.15:4001":2, "dir-server":9, "Client-A":4}
+New onion forwarded to next hop
+tor-node-10.0.0.16:4001 {"data-server":3, "tor-node-10.0.0.16:4001":6, "tor-node-10.0.0.13:4001":5, "tor-node-10.0.0.15:4001":7, "dir-server":9, "Client-A":4}
+Response onion received
+tor-node-10.0.0.16:4001 {"tor-node-10.0.0.15:4001":7, "dir-server":9, "Client-A":4, "data-server":3, "tor-node-10.0.0.16:4001":7, "tor-node-10.0.0.13:4001":5}
+Response onion forwarded to previous hop

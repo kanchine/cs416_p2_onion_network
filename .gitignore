@@ -16,6 +16,7 @@
 .idea
 
 *.log
+!report/tor-net-vec-log.log
 
 Client-*-Log.txt
 data-server-Log.txt

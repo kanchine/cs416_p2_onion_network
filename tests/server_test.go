@@ -6,6 +6,7 @@ import (
 	"../server/DataServer"
 	"../utils"
 	"crypto/rsa"
+	"github.com/DistributedClocks/GoVector/govec"
 	"net"
 	"testing"
 	"time"
@@ -92,9 +93,11 @@ func sendAndReceive(serverIpPort string, serverPublicKey rsa.PublicKey, key stri
 
 	onionbytes, symKeys := CreateEncryptedRequest(order, myMap, key)
 
-	_, _ = utils.TCPWrite(tcpConn, onionbytes)
+	serverVectorLogger := govec.InitGoVector("data-server", "data-server", govec.GetDefaultConfig())
+	_, _ = utils.TCPWrite(tcpConn, onionbytes,serverVectorLogger, "Responded to client request")
 
-	res, _ := utils.TCPRead(tcpConn)
+	clientVectorLogger := govec.InitGoVector("fake-client", "client", govec.GetDefaultConfig())
+	res, _ := utils.TCPRead(tcpConn, clientVectorLogger, "Response from the server")
 
 	for _, key := range symKeys {
 		var err error

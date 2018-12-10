@@ -46,7 +46,7 @@ func handleNewCircuitConn(newCircuitConn *net.TCPConn, privateKey *rsa.PrivateKe
 	fmt.Printf("TorNode: Onion Peel successful\n")
 
 	// todo next: set up conn to next hop, kick off reverse forwarding thread
-	laddr, laddrerr := net.ResolveTCPAddr("tcp", ":"+getNewUnusedPort())
+	laddr, laddrerr := net.ResolveTCPAddr("tcp", ":0")
 	raddr, raddrerr := net.ResolveTCPAddr("tcp", nextHop)
 	if laddrerr != nil || raddrerr != nil {
 		fmt.Printf("TorNode: WARNING error resolving tcp addr: %s, %s\n", laddrerr, raddrerr)

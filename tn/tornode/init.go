@@ -12,7 +12,7 @@ import (
 func contactDS(dsIPPort string, TorIPPort string, fdlibIPPort string, pubKey *rsa.PublicKey, vecLogger *govec.GoLog) (bool, error) {
 	var laddr, raddr *net.TCPAddr
 	var addrErr error
-	laddr, addrErr = net.ResolveTCPAddr("tcp", ":"+getNewUnusedPort())
+	laddr, addrErr = net.ResolveTCPAddr("tcp", ":0")
 	raddr, addrErr = net.ResolveTCPAddr("tcp", dsIPPort)
 	if addrErr != nil {
 		return false, addrErr

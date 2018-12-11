@@ -1,8 +1,0 @@
-{
-    "ID": "D",
-    "DSPublicKeyPath": "./dirserver/public.pem",
-    "ServerPublicKeyPath": "./server/DataServer/public.pem",
-        "MaxNumNodes": 5,
-        "DSIPPort": "10.0.0.12:8002",
-    "ServerIPPort": "10.0.0.14:8080"
-}

@@ -6,4 +6,4 @@ echo "Clearing outdated logs..."
 rm *.log
 rm *.txt
 echo "Running Data Server..."
-go run server/server.go config/server.json
+go run server/server.go config/vm-server.json
